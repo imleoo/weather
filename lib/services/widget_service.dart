@@ -8,7 +8,7 @@ import '../providers/weather_provider.dart';
 
 /// 小部件服务，用于更新桌面小部件
 class WidgetService {
-  static const String appGroupId = 'group.com.example.weather';
+  static const String appGroupId = 'group.cn.leoobai.fishingweather';
   static const String androidWidgetName = 'FishingWeatherWidgetProvider';
   static const String iOSWidgetName = 'FishingWeatherWidget';
 

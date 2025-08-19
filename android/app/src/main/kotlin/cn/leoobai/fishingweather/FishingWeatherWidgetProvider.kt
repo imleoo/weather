@@ -1,4 +1,4 @@
-package com.example.weather
+package cn.leoobai.fishingweather
 
 import android.app.PendingIntent
 import android.appwidget.AppWidgetManager
