@@ -1,0 +1,45 @@
+name: weather
+description: "A weather forecast app"
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.2.3 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  cupertino_icons: ^1.0.2
+  http: ^1.1.0
+  geolocator: ^10.1.0
+  permission_handler: ^11.0.1
+  provider: ^6.0.5
+  intl: ^0.20.2
+  flutter_spinkit: ^5.2.0
+  cached_network_image: ^3.3.0
+  shared_preferences: ^2.2.2
+  lottie: ^2.7.0
+  flutter_animate: ^4.3.0
+  google_mobile_ads: ^4.0.0
+  flutter_launcher_icons: ^0.14.4
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^2.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/images/
+
+# 应用图标配置
+flutter_icons:
+  android: "ic_launcher"
+  ios: true
+  image_path: "assets/icon/icon.png"
+  adaptive_icon_background: "#1976D2"
+  adaptive_icon_foreground: "assets/icon/icon_foreground.png"
+
