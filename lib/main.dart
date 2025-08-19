@@ -5,10 +5,15 @@ import 'l10n/app_localizations.dart';
 import 'providers/weather_provider.dart';
 import 'providers/settings_provider.dart';
 import 'screens/home_screen.dart';
+import 'services/widget_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await AppLocalizations.init();
+
+  // 初始化小部件服务
+  await WidgetService.init();
+
   runApp(const MyApp());
 }
 

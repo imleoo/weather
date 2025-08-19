@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../l10n/app_localizations.dart';
 import '../providers/settings_provider.dart';
+import '../services/widget_service.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({Key? key}) : super(key: key);
@@ -90,6 +91,30 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 value: settingsProvider.weatherAlerts,
                 onChanged: (bool value) {
                   settingsProvider.setWeatherAlerts(value);
+                },
+              ),
+              const Divider(),
+
+              // 更新桌面小部件
+              ListTile(
+                title: const Text('更新桌面小部件'),
+                subtitle: const Text('手动更新钓鱼天气小部件数据'),
+                trailing: const Icon(Icons.refresh),
+                onTap: () async {
+                  // 显示加载指示器
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('正在更新小部件数据...')),
+                  );
+
+                  // 更新小部件数据
+                  await WidgetService.updateWidgetData();
+
+                  // 显示成功消息
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('小部件数据已更新')),
+                    );
+                  }
                 },
               ),
               const Divider(),
