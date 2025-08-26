@@ -6,7 +6,7 @@ void main() {
 }
 
 class SaveIconApp extends StatelessWidget {
-  const SaveIconApp({Key? key}) : super(key: key);
+  const SaveIconApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -21,7 +21,7 @@ class SaveIconApp extends StatelessWidget {
 }
 
 class SaveIconScreen extends StatefulWidget {
-  const SaveIconScreen({Key? key}) : super(key: key);
+  const SaveIconScreen({super.key});
 
   @override
   _SaveIconScreenState createState() => _SaveIconScreenState();

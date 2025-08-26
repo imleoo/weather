@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../l10n/app_localizations.dart';
 
 class CitySearchScreen extends StatefulWidget {
-  const CitySearchScreen({Key? key}) : super(key: key);
+  const CitySearchScreen({super.key});
 
   @override
   State<CitySearchScreen> createState() => _CitySearchScreenState();

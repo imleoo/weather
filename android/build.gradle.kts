@@ -3,6 +3,15 @@ allprojects {
         google()
         mavenCentral()
     }
+    
+    // 为所有项目设置Java版本
+    plugins.withType<JavaPlugin> {
+        extensions.configure<JavaPluginExtension> {
+            toolchain {
+                languageVersion.set(JavaLanguageVersion.of(17))
+            }
+        }
+    }
 }
 
 val newBuildDir: Directory = rootProject.layout.buildDirectory.dir("../../build").get()

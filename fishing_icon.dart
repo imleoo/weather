@@ -5,10 +5,10 @@ class FishingIcon extends StatelessWidget {
   final Color color;
 
   const FishingIcon({
-    Key? key,
+    super.key,
     this.size = 200.0,
     this.color = Colors.blue,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

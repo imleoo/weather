@@ -6,8 +6,7 @@ import 'fishing_forecast.dart';
 class FishingDailyForecast extends StatefulWidget {
   final List<Weather> forecast;
 
-  const FishingDailyForecast({Key? key, required this.forecast})
-      : super(key: key);
+  const FishingDailyForecast({super.key, required this.forecast});
 
   @override
   State<FishingDailyForecast> createState() => _FishingDailyForecastState();

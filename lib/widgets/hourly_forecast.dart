@@ -11,7 +11,7 @@ import 'package:provider/provider.dart';
 class HourlyForecast extends StatefulWidget {
   final List<Hourly> hourlyData;
 
-  const HourlyForecast({Key? key, required this.hourlyData}) : super(key: key);
+  const HourlyForecast({super.key, required this.hourlyData});
 
   @override
   State<HourlyForecast> createState() => _HourlyForecastState();

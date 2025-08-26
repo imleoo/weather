@@ -1,4 +1,12 @@
 import '../l10n/app_localizations.dart';
+import '../models/fishing_weather_model.dart';
+
+// 扩展Hourly类，添加钓鱼适宜性评估方法
+extension FishingHourlyExtension on Hourly {
+  // 评估当前小时的钓鱼适宜性
+  FishingWeatherModel get fishingSuitability =>
+      FishingWeatherModel.evaluate(this);
+}
 
 class WeatherModel {
   final CurrentCondition currentCondition;
@@ -80,9 +88,6 @@ class CurrentCondition {
   factory CurrentCondition.fromJson(Map<String, dynamic> json) {
     String getWeatherDesc() {
       try {
-        // 打印调试信息，查看API返回的数据结构
-        print('CurrentCondition JSON: $json');
-
         // 根据当前语言选择合适的天气描述
         if (!AppLocalizations.isEnglish) {
           // 尝试获取中文天气描述
@@ -203,6 +208,10 @@ class Hourly {
   final String humidity;
   final String windspeedKmph;
   final String feelsLikeC;
+  final String pressure;
+  final String cloudcover;
+  final String visibility;
+  final String dewPointC;
 
   Hourly({
     required this.time,
@@ -213,14 +222,15 @@ class Hourly {
     required this.humidity,
     required this.windspeedKmph,
     required this.feelsLikeC,
+    required this.pressure,
+    required this.cloudcover,
+    required this.visibility,
+    required this.dewPointC,
   });
 
   factory Hourly.fromJson(Map<String, dynamic> json) {
     String getWeatherDesc() {
       try {
-        // 打印调试信息，查看API返回的数据结构
-        print('Hourly JSON: $json');
-
         // 根据当前语言选择合适的天气描述
         if (!AppLocalizations.isEnglish) {
           // 尝试获取中文天气描述
@@ -267,6 +277,10 @@ class Hourly {
       humidity: json['humidity']?.toString() ?? '0',
       windspeedKmph: json['windspeedKmph']?.toString() ?? '0',
       feelsLikeC: json['FeelsLikeC']?.toString() ?? '0',
+      pressure: json['pressure']?.toString() ?? '1010',
+      cloudcover: json['cloudcover']?.toString() ?? '50',
+      visibility: json['visibility']?.toString() ?? '10',
+      dewPointC: json['DewPointC']?.toString() ?? '0',
     );
   }
 }

@@ -6,19 +6,25 @@ import 'providers/weather_provider.dart';
 import 'providers/settings_provider.dart';
 import 'screens/home_screen.dart';
 import 'services/widget_service.dart';
+import 'utils/app_lifecycle_manager.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await AppLocalizations.init();
 
-  // 初始化小部件服务
-  await WidgetService.init();
+  // 初始化小部件服务（添加错误处理）
+  try {
+    await WidgetService.init().timeout(const Duration(seconds: 10));
+  } catch (e) {
+    // 小部件服务初始化失败不影响应用运行
+    debugPrint('Widget service initialization failed: $e');
+  }
 
   runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -47,7 +53,9 @@ class MyApp extends StatelessWidget {
             ],
             locale: Locale(AppLocalizations.currentLanguage, ''),
             debugShowCheckedModeBanner: false,
-            home: const HomeScreen(),
+            home: const AppLifecycleManager(
+              child: HomeScreen(),
+            ),
           );
         },
       ),

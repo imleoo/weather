@@ -8,7 +8,7 @@ import '../utils/animation_utils.dart';
 class DailyForecast extends StatefulWidget {
   final List<Weather> forecast;
 
-  const DailyForecast({Key? key, required this.forecast}) : super(key: key);
+  const DailyForecast({super.key, required this.forecast});
 
   @override
   State<DailyForecast> createState() => _DailyForecastState();

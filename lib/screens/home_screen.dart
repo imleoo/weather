@@ -4,12 +4,13 @@ import '../providers/weather_provider.dart';
 import '../utils/weather_icons.dart';
 import '../widgets/current_weather.dart';
 import '../widgets/fishing_daily_forecast.dart';
+import '../widgets/weather_selectors.dart';
 import '../l10n/app_localizations.dart';
 import 'city_search_screen.dart';
 import 'settings_screen.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({Key? key}) : super(key: key);
+  const HomeScreen({super.key});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -30,17 +31,26 @@ class _HomeScreenState extends State<HomeScreen> {
       context,
       listen: false,
     );
-    await weatherProvider.fetchWeatherByCurrentLocation();
+    try {
+      // 首次启动使用IP定位快速获取天气
+      await weatherProvider.fetchWeatherQuickly();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('获取天气数据失败: ${e.toString()}')),
+        );
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Consumer<WeatherProvider>(
-          builder: (context, weatherProvider, child) {
+        title: CitySelector(
+          builder: (city) {
             return Text(
-              weatherProvider.city ?? AppLocalizations.appTitle,
+              city ?? AppLocalizations.appTitle,
               style: const TextStyle(color: Colors.white),
             );
           },
@@ -79,76 +89,116 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           IconButton(
             icon: const Icon(Icons.my_location, color: Colors.white),
-            onPressed: _fetchWeatherData,
+            onPressed: () async {
+              final weatherProvider = Provider.of<WeatherProvider>(
+                context,
+                listen: false,
+              );
+              try {
+                // 点击定位按钮时使用GPS精确定位
+                await weatherProvider.fetchWeatherByCurrentLocation();
+              } catch (e) {
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('获取天气数据失败: ${e.toString()}')),
+                  );
+                }
+              }
+            },
           ),
         ],
       ),
-      body: Consumer<WeatherProvider>(
-        builder: (context, weatherProvider, child) {
-          if (weatherProvider.isLoading) {
+      body: LoadingSelector(
+        builder: (isLoading) {
+          if (isLoading) {
             return const Center(child: CircularProgressIndicator());
           }
 
-          if (weatherProvider.error != null) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    '${AppLocalizations.loadingFailed}: ${weatherProvider.error}',
-                    textAlign: TextAlign.center,
+          return ErrorSelector(
+            builder: (error) {
+              if (error != null) {
+                return Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        '${AppLocalizations.loadingFailed}: $error',
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 20),
+                      ElevatedButton(
+                        onPressed: _fetchWeatherData,
+                        child: Text(AppLocalizations.retry),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 20),
-                  ElevatedButton(
-                    onPressed: _fetchWeatherData,
-                    child: Text(AppLocalizations.retry),
-                  ),
-                ],
-              ),
-            );
-          }
+                );
+              }
 
-          if (weatherProvider.weatherData == null) {
-            return Center(child: Text(AppLocalizations.noWeatherData));
-          }
+              return WeatherDataExistenceSelector(
+                builder: (hasData) {
+                  if (!hasData) {
+                    return Center(child: Text(AppLocalizations.noWeatherData));
+                  }
 
-          final weatherData = weatherProvider.weatherData!;
-          final currentCondition = weatherData.currentCondition;
-          final weatherCode = currentCondition.weatherCode;
-          final backgroundColor = WeatherIcons.getWeatherColor(weatherCode);
+                  return WeatherCodeSelector(
+                    builder: (weatherCode) {
+                      final backgroundColor = WeatherIcons.getWeatherColor(weatherCode ?? '113');
 
-          return Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  backgroundColor,
-                  backgroundColor.withOpacity(0.7),
-                  Colors.white,
-                ],
-              ),
-            ),
-            child: RefreshIndicator(
-              onRefresh: () async {
-                if (weatherProvider.city != null) {
-                  await weatherProvider.fetchWeatherByCity(
-                    weatherProvider.city!,
+                      return Container(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              backgroundColor,
+                              backgroundColor.withOpacity(0.7),
+                              Colors.white,
+                            ],
+                          ),
+                        ),
+                        child: RefreshIndicator(
+                          onRefresh: () async {
+                            final weatherProvider = Provider.of<WeatherProvider>(
+                              context,
+                              listen: false,
+                            );
+                            if (weatherProvider.city != null && weatherProvider.city != weatherProvider.weatherData?.nearestArea.areaName) {
+                              // 如果是手动选择的城市，刷新城市天气
+                              await weatherProvider.fetchWeatherByCity(
+                                weatherProvider.city!,
+                              );
+                            } else {
+                              // 否则使用快速IP定位刷新
+                              await weatherProvider.fetchWeatherQuickly();
+                            }
+                          },
+                          child: ListView(
+                            padding: const EdgeInsets.all(16.0),
+                            children: [
+                              CurrentConditionSelector(
+                                builder: (currentCondition) {
+                                  return CurrentWeather(
+                                    currentCondition: currentCondition,
+                                  );
+                                },
+                              ),
+                              const SizedBox(height: 20),
+                              // 使用新的钓鱼天气预报组件
+                              ForecastSelector(
+                                builder: (forecast) {
+                                  return FishingDailyForecast(forecast: forecast);
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
                   );
-                } else {
-                  await weatherProvider.fetchWeatherByCurrentLocation();
-                }
-              },
-              child: ListView(
-                padding: const EdgeInsets.all(16.0),
-                children: [
-                  CurrentWeather(currentCondition: currentCondition),
-                  const SizedBox(height: 20),
-                  // 使用新的钓鱼天气预报组件
-                  FishingDailyForecast(forecast: weatherData.forecast),
-                ],
-              ),
-            ),
+                },
+              );
+            },
           );
         },
       ),

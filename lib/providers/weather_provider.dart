@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import '../models/weather_model.dart';
 import '../services/weather_service.dart';
@@ -22,12 +23,34 @@ class WeatherProvider with ChangeNotifier {
     _error = null;
 
     try {
-      final weather = await _weatherService.getWeatherByCity(city);
+      final weather = await _weatherService.getWeatherByCity(city).timeout(const Duration(seconds: 60));
       _weatherData = weather;
       _city = city;
       _error = null;
+    } on TimeoutException {
+      _error = '获取天气数据超时，请检查网络连接';
     } catch (e) {
-      _error = e.toString();
+      _error = '获取天气数据失败: ${e.toString()}';
+    } finally {
+      _setLoading(false);
+    }
+  }
+
+  /// 快速获取天气数据（优先使用IP定位）
+  Future<void> fetchWeatherQuickly() async {
+    _setLoading(true);
+    _error = null;
+
+    try {
+      // 首先尝试IP定位（最快）
+      final weather = await _weatherService.getWeatherByIpLocation().timeout(const Duration(seconds: 20));
+      _weatherData = weather;
+      _city = weather.nearestArea.areaName;
+      _error = null;
+    } on TimeoutException {
+      _error = '获取天气数据超时，请检查网络连接';
+    } catch (e) {
+      _error = '获取天气数据失败: ${e.toString()}';
     } finally {
       _setLoading(false);
     }
@@ -38,18 +61,20 @@ class WeatherProvider with ChangeNotifier {
     _error = null;
 
     try {
-      final position = await _locationService.getCurrentLocation();
+      final position = await _locationService.getCurrentLocation().timeout(const Duration(seconds: 60));
       if (position != null) {
         final weather = await _weatherService.getWeatherByLocation(
           position.latitude,
           position.longitude,
-        );
+        ).timeout(const Duration(seconds: 60));
         _weatherData = weather;
         _city = weather.nearestArea.areaName;
         _error = null;
       }
+    } on TimeoutException {
+      _error = '获取天气数据超时，请检查网络连接';
     } catch (e) {
-      _error = e.toString();
+      _error = '获取天气数据失败: ${e.toString()}';
     } finally {
       _setLoading(false);
     }

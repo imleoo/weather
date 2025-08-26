@@ -1,4 +1,7 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/weather_model.dart';
 import '../l10n/app_localizations.dart';
 
@@ -19,8 +22,118 @@ class FishingWeatherModel {
     required this.advice,
   });
 
-  // 根据小时天气数据评估钓鱼适宜性
+  // 缓存相关常量
+  static const String _cachePrefix = 'fishing_weather_cache_';
+  static const Duration _cacheDuration = Duration(minutes: 30);
+
+  // 异步评估方法，使用compute在后台线程执行
+  static Future<FishingWeatherModel> evaluateAsync(Hourly hourly) async {
+    return compute(_evaluateInternal, hourly);
+  }
+
+  // 带缓存的异步评估方法
+  static Future<FishingWeatherModel> evaluateAsyncWithCache(
+      Hourly hourly) async {
+    final cacheKey = _generateCacheKey(hourly);
+
+    // 尝试从缓存获取
+    final cachedResult = await _getCachedResult(cacheKey);
+    if (cachedResult != null) {
+      return cachedResult;
+    }
+
+    // 计算并缓存结果
+    final result = await compute(_evaluateInternal, hourly);
+    await _cacheResult(cacheKey, result);
+
+    return result;
+  }
+
+  // 同步评估方法，用于直接调用
   static FishingWeatherModel evaluate(Hourly hourly) {
+    return _evaluateInternal(hourly);
+  }
+
+  // 生成缓存键
+  static String _generateCacheKey(Hourly hourly) {
+    return '$_cachePrefix${hourly.time}_${hourly.tempC}_${hourly.weatherCode}_${hourly.chanceofrain}_${hourly.humidity}_${hourly.windspeedKmph}_${hourly.pressure}_${hourly.cloudcover}_${hourly.visibility}';
+  }
+
+  // 从缓存获取结果
+  static Future<FishingWeatherModel?> _getCachedResult(String cacheKey) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final cachedData = prefs.getString(cacheKey);
+
+      if (cachedData == null) return null;
+
+      final decoded = json.decode(cachedData) as Map<String, dynamic>;
+      final timestamp =
+          DateTime.fromMillisecondsSinceEpoch(decoded['timestamp']);
+
+      if (DateTime.now().difference(timestamp) > _cacheDuration) {
+        await prefs.remove(cacheKey);
+        return null;
+      }
+
+      return FishingWeatherModel(
+        hourlyData: Hourly.fromJson(decoded['hourlyData']),
+        suitability: FishingSuitability.values.firstWhere(
+          (e) => e.name == decoded['suitability'],
+        ),
+        score: decoded['score'],
+        scoreDetails: Map<String, int>.from(decoded['scoreDetails']),
+        advice: decoded['advice'],
+      );
+    } catch (e) {
+      return null;
+    }
+  }
+
+  // 缓存结果
+  static Future<void> _cacheResult(
+      String cacheKey, FishingWeatherModel result) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final cacheData = {
+        'timestamp': DateTime.now().millisecondsSinceEpoch,
+        'hourlyData': {
+          'time': result.hourlyData.time,
+          'tempC': result.hourlyData.tempC,
+          'weatherCode': result.hourlyData.weatherCode,
+          'chanceofrain': result.hourlyData.chanceofrain,
+          'humidity': result.hourlyData.humidity,
+          'windspeedKmph': result.hourlyData.windspeedKmph,
+          'pressure': result.hourlyData.pressure,
+          'cloudcover': result.hourlyData.cloudcover,
+          'visibility': result.hourlyData.visibility,
+        },
+        'suitability': result.suitability.name,
+        'score': result.score,
+        'scoreDetails': result.scoreDetails,
+        'advice': result.advice,
+      };
+
+      await prefs.setString(cacheKey, json.encode(cacheData));
+    } catch (e) {
+      // 缓存失败不影响主要功能
+    }
+  }
+
+  // 清除钓鱼天气缓存
+  static Future<void> clearCache() async {
+    final prefs = await SharedPreferences.getInstance();
+    final keys = prefs.getKeys();
+
+    for (final key in keys) {
+      if (key.startsWith(_cachePrefix)) {
+        await prefs.remove(key);
+      }
+    }
+  }
+
+  // 内部评估逻辑，可在后台线程执行
+  static FishingWeatherModel _evaluateInternal(Hourly hourly) {
     // 初始化评分详情
     Map<String, int> scoreDetails = {
       'pressure': 0,
@@ -129,28 +242,49 @@ class FishingWeatherModel {
 
     // 确定适宜性等级
     FishingSuitability suitability;
-    String advice;
+
+    // 使用列表存储建议，减少字符串拼接操作
+    List<String> adviceParts = [];
 
     if (totalScore >= 12) {
       suitability = FishingSuitability.excellent;
-      advice = AppLocalizations.isEnglish
+      adviceParts.add(AppLocalizations.isEnglish
           ? 'Excellent fishing conditions! Fish are likely to be active. Highly recommended!'
-          : '非常适宜钓鱼，鱼群活跃，建议出钓！';
+          : '非常适宜钓鱼，鱼群活跃，建议出钓！');
     } else if (totalScore >= 8) {
       suitability = FishingSuitability.good;
-      advice = AppLocalizations.isEnglish
+      adviceParts.add(AppLocalizations.isEnglish
           ? 'Good fishing conditions. Favorable weather for fishing.'
-          : '适宜钓鱼，条件良好，可以考虑出钓。';
+          : '适宜钓鱼，条件良好，可以考虑出钓。');
     } else if (totalScore >= 4) {
       suitability = FishingSuitability.moderate;
-      advice = AppLocalizations.isEnglish
+      adviceParts.add(AppLocalizations.isEnglish
           ? 'Moderate fishing conditions. Catch may be inconsistent.'
-          : '钓鱼条件一般，鱼获可能不稳定。';
+          : '钓鱼条件一般，鱼获可能不稳定。');
     } else {
       suitability = FishingSuitability.poor;
-      advice = AppLocalizations.isEnglish
+      adviceParts.add(AppLocalizations.isEnglish
           ? 'Poor fishing conditions. Consider choosing another time.'
-          : '不适宜钓鱼，建议选择其他时间。';
+          : '不适宜钓鱼，建议选择其他时间。');
+    }
+
+    // 添加具体因素的建议
+    if (scoreDetails['pressure']! < 0) {
+      adviceParts.add(AppLocalizations.isEnglish
+          ? 'Low pressure may reduce fish activity.'
+          : '气压较低，鱼群活性可能降低。');
+    }
+
+    if (scoreDetails['windSpeed']! < 0) {
+      adviceParts.add(AppLocalizations.isEnglish
+          ? 'Strong wind, choose sheltered spots.'
+          : '风速较大，建议选择背风处钓鱼。');
+    }
+
+    if (scoreDetails['visibility']! < 0) {
+      adviceParts.add(AppLocalizations.isEnglish
+          ? 'Poor visibility, be cautious.'
+          : '能见度较低，注意安全。');
     }
 
     return FishingWeatherModel(
@@ -158,7 +292,7 @@ class FishingWeatherModel {
       suitability: suitability,
       score: totalScore,
       scoreDetails: scoreDetails,
-      advice: advice,
+      advice: adviceParts.join(' '),
     );
   }
 
@@ -189,15 +323,33 @@ class FishingWeatherModel {
         return AppLocalizations.poor;
     }
   }
-}
 
-// 扩展Hourly类，添加钓鱼相关字段
-extension FishingHourlyExtension on Hourly {
-  String get pressure => '1010'; // 假设API没有提供气压数据，使用默认值
-  String get cloudcover => '50'; // 假设API没有提供云量数据，使用默认值
-  String get visibility => '10'; // 假设API没有提供能见度数据，使用默认值
+  // 获取详细的钓鱼建议
+  String getDetailedAdvice() {
+    List<String> detailedAdvice = [];
 
-  // 评估当前小时的钓鱼适宜性
-  FishingWeatherModel get fishingSuitability =>
-      FishingWeatherModel.evaluate(this);
+    // 基础建议
+    detailedAdvice.add(advice);
+
+    // 根据评分添加具体建议
+    if (scoreDetails['temperature']! < 0) {
+      detailedAdvice.add(AppLocalizations.isEnglish
+          ? 'Temperature is not ideal. Fish may be less active.'
+          : '温度不适宜，鱼群活性可能受影响，建议在水深处钓鱼。');
+    }
+
+    if (scoreDetails['cloudCover']! > 0) {
+      detailedAdvice.add(AppLocalizations.isEnglish
+          ? 'Cloud cover is optimal for fishing.'
+          : '云量适中，有利于钓鱼。');
+    }
+
+    if (scoreDetails['rainChance']! < 0 && scoreDetails['weather']! >= 0) {
+      detailedAdvice.add(AppLocalizations.isEnglish
+          ? 'Light rain may increase fish activity.'
+          : '小雨可能使鱼群活跃，但需注意装备防水。');
+    }
+
+    return detailedAdvice.join(' ');
+  }
 }

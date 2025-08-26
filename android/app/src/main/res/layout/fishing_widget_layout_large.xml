@@ -91,7 +91,7 @@
                         android:id="@+id/fishing_suitability"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="适宜性: 未知"
+                        android:text="适宜性: --"
                         android:textSize="14sp"
                         android:textColor="#FFFFFF"/>
 
@@ -100,8 +100,8 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="评分: --"
-                        android:textSize="14sp"
-                        android:textColor="#FFFFFF"/>
+                        android:textSize="12sp"
+                        android:textColor="#CCFFFFFF"/>
                 </LinearLayout>
             </LinearLayout>
         </LinearLayout>
@@ -111,17 +111,17 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="00:00"
-            android:textSize="32sp"
+            android:textSize="48sp"
             android:textStyle="bold"
             android:textColor="#FFFFFF"
             android:layout_gravity="center_horizontal"
             android:layout_marginTop="4dp"/>
             
         <TextView
-            android:id="@+id/current_pressure"
+            android:id="@+id/location_text"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="气压: 1010 hPa"
+            android:text="北京市"
             android:textSize="14sp"
             android:textColor="#CCFFFFFF"
             android:layout_gravity="center_horizontal"

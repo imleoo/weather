@@ -13,10 +13,19 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
+        // 抑制过时选项的警告
+        isCoreLibraryDesugaringEnabled = true
     }
 
     kotlinOptions {
         jvmTarget = JavaVersion.VERSION_17.toString()
+        // 抑制过时API的警告
+        freeCompilerArgs = listOf("-Xsuppress-warnings")
+    }
+    
+    tasks.withType<JavaCompile> {
+        options.compilerArgs.add("-Xlint:none")
+        options.compilerArgs.add("-Xlint:-options")
     }
     
     lint {
@@ -45,4 +54,9 @@ android {
 
 flutter {
     source = "../.."
+}
+
+dependencies {
+    // 添加反编译支持
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
 }

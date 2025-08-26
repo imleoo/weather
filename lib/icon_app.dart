@@ -10,7 +10,7 @@ void main() {
 }
 
 class IconApp extends StatelessWidget {
-  const IconApp({Key? key}) : super(key: key);
+  const IconApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -25,7 +25,7 @@ class IconApp extends StatelessWidget {
 }
 
 class IconScreen extends StatefulWidget {
-  const IconScreen({Key? key}) : super(key: key);
+  const IconScreen({super.key});
 
   @override
   _IconScreenState createState() => _IconScreenState();

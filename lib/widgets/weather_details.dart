@@ -7,8 +7,7 @@ import 'dart:math' as math;
 class WeatherDetails extends StatefulWidget {
   final CurrentCondition currentCondition;
 
-  const WeatherDetails({Key? key, required this.currentCondition})
-      : super(key: key);
+  const WeatherDetails({super.key, required this.currentCondition});
 
   @override
   State<WeatherDetails> createState() => _WeatherDetailsState();

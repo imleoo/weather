@@ -48,21 +48,6 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
-        <!-- 注册钓鱼天气小部件（2x1尺寸） -->
-        <receiver
-            android:name=".FishingWeatherWidgetProvider"
-            android:exported="true"
-            android:label="钓鱼天气 (小)">
-            <intent-filter>
-                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-                <action android:name="android.intent.action.BOOT_COMPLETED" />
-                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
-            </intent-filter>
-            <meta-data
-                android:name="android.appwidget.provider"
-                android:resource="@xml/fishing_widget_info" />
-        </receiver>
-        
         <!-- 注册钓鱼天气小部件（5x2尺寸） -->
         <receiver
             android:name=".FishingWeatherWidgetLargeProvider"
@@ -87,6 +72,13 @@
                 android:name="androidx.work.WorkManagerInitializer"
                 android:value="androidx.startup" />
         </provider>
+        
+        <!-- 注册Widget保活服务 -->
+        <service
+            android:name=".WidgetKeepAliveService"
+            android:enabled="true"
+            android:exported="false"
+            android:stopWithTask="false" />
     </application>
     <!-- Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility and
@@ -103,4 +95,10 @@
     <!-- 添加小部件所需权限 -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.RECEIVE_TIME_TICK" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    
+    <!-- Android 13+ 需要通知权限 -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 </manifest>

@@ -3,19 +3,103 @@ package cn.leoobai.fishingweather
 import android.app.PendingIntent
 import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider
+import android.content.BroadcastReceiver
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.os.Build
 import android.widget.RemoteViews
 import es.antonborri.home_widget.HomeWidgetPlugin
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import java.util.Timer
+import java.util.TimerTask
 
 /**
  * 钓鱼天气大尺寸小部件提供者
  */
 class FishingWeatherWidgetLargeProvider : AppWidgetProvider() {
+    
+    // 时间变化广播接收器
+    private var timeChangedReceiver: BroadcastReceiver? = null
+    
+    override fun onEnabled(context: Context) {
+        super.onEnabled(context)
+        
+        // 注册时间变化广播接收器
+        registerTimeChangedReceiver(context)
+        
+        // 启动前台服务保活widget
+        startWidgetKeepAliveService(context)
+    }
+    
+    override fun onDisabled(context: Context) {
+        super.onDisabled(context)
+        
+        // 取消注册时间变化广播接收器
+        unregisterTimeChangedReceiver(context)
+        
+        // 停止保活服务
+        stopWidgetKeepAliveService(context)
+    }
+    
+    /**
+     * 注册时间变化广播接收器
+     */
+    private fun registerTimeChangedReceiver(context: Context) {
+        if (timeChangedReceiver == null) {
+            timeChangedReceiver = object : BroadcastReceiver() {
+                override fun onReceive(context: Context, intent: Intent) {
+                    // 当时间变化时，更新小部件
+                    val appWidgetManager = AppWidgetManager.getInstance(context)
+                    val appWidgetIds = appWidgetManager.getAppWidgetIds(
+                        ComponentName(context, FishingWeatherWidgetLargeProvider::class.java)
+                    )
+                    onUpdate(context, appWidgetManager, appWidgetIds)
+                }
+            }
+            
+            // 创建一个定时器，每分钟更新一次时间
+            val timer = Timer()
+            timer.scheduleAtFixedRate(object : TimerTask() {
+                override fun run() {
+                    // 在主线程中更新小部件
+                    android.os.Handler(android.os.Looper.getMainLooper()).post {
+                        val appWidgetManager = AppWidgetManager.getInstance(context)
+                        val appWidgetIds = appWidgetManager.getAppWidgetIds(
+                            ComponentName(context, FishingWeatherWidgetLargeProvider::class.java)
+                        )
+                        onUpdate(context, appWidgetManager, appWidgetIds)
+                    }
+                }
+            }, 0, 60000) // 延迟0毫秒，每60000毫秒（1分钟）执行一次
+        }
+    }
+    
+    /**
+     * 取消注册时间变化广播接收器
+     */
+    private fun unregisterTimeChangedReceiver(context: Context) {
+        if (timeChangedReceiver != null) {
+            try {
+                context.applicationContext.unregisterReceiver(timeChangedReceiver)
+            } catch (e: Exception) {
+                // 忽略异常
+            }
+            timeChangedReceiver = null
+        }
+    }
+    
+    override fun onReceive(context: Context, intent: Intent) {
+        super.onReceive(context, intent)
+        
+        // 当接收到ACTION_APPWIDGET_UPDATE广播时，注册时间变化广播接收器
+        if (intent.action == AppWidgetManager.ACTION_APPWIDGET_UPDATE) {
+            registerTimeChangedReceiver(context)
+        }
+    }
     
     override fun onUpdate(
         context: Context,
@@ -45,12 +129,13 @@ class FishingWeatherWidgetLargeProvider : AppWidgetProvider() {
                 // 设置钓鱼适宜性
                 val suitabilityKey = if (isEnglish) "suitability_en" else "suitability"
                 val suitability = widgetData.getString(suitabilityKey, if (isEnglish) "Unknown" else "未知")
-                setTextViewText(R.id.fishing_suitability, suitability)
-                
-                // 设置钓鱼评分
-                val scoreLabel = if (isEnglish) "Score: " else "评分: "
                 val score = widgetData.getString("score", "--")
-                setTextViewText(R.id.fishing_score, scoreLabel + score)
+                val suitabilityText = if (isEnglish) "Level: $suitability" else "适宜性: $suitability"
+                setTextViewText(R.id.fishing_suitability, suitabilityText)
+                
+                // 设置评分
+                val scoreText = if (isEnglish) "Score: $score" else "评分: $score"
+                setTextViewText(R.id.fishing_score, scoreText)
                 
                 // 设置天气图标
                 val weatherCode = widgetData.getString("weatherCode", "") ?: ""
@@ -62,15 +147,14 @@ class FishingWeatherWidgetLargeProvider : AppWidgetProvider() {
                 val suitabilityColor = getSuitabilityColor(suitabilityLevel)
                 setInt(R.id.suitability_indicator, "setColorFilter", suitabilityColor)
                 
-                // 设置当前时间
+                // 设置当前时间（每次更新时都会刷新，显示时分）
                 val dateFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
-                val currentTime = dateFormat.format(Date())
+                val currentTime = dateFormat.format(Date(System.currentTimeMillis()))
                 setTextViewText(R.id.current_time, currentTime)
                 
-                // 设置当前气压
-                val pressure = widgetData.getString("pressure", "1010")
-                val pressureText = if (isEnglish) "Pressure: $pressure hPa" else "气压: $pressure hPa"
-                setTextViewText(R.id.current_pressure, pressureText)
+                // 设置定位地址
+                val location = widgetData.getString("location", if (isEnglish) "Unknown Location" else "未知位置")
+                setTextViewText(R.id.location_text, location)
                 
                 // 创建一个明确的Intent来启动MainActivity
                 val intent = Intent(context, MainActivity::class.java).apply {
@@ -95,6 +179,34 @@ class FishingWeatherWidgetLargeProvider : AppWidgetProvider() {
             }
             
             appWidgetManager.updateAppWidget(appWidgetId, views)
+        }
+    }
+    
+    /**
+     * 启动widget保活服务
+     */
+    private fun startWidgetKeepAliveService(context: Context) {
+        try {
+            val serviceIntent = Intent(context, WidgetKeepAliveService::class.java)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                context.startForegroundService(serviceIntent)
+            } else {
+                context.startService(serviceIntent)
+            }
+        } catch (e: Exception) {
+            // 服务启动失败，忽略异常
+        }
+    }
+    
+    /**
+     * 停止widget保活服务
+     */
+    private fun stopWidgetKeepAliveService(context: Context) {
+        try {
+            val serviceIntent = Intent(context, WidgetKeepAliveService::class.java)
+            context.stopService(serviceIntent)
+        } catch (e: Exception) {
+            // 服务停止失败，忽略异常
         }
     }
     
