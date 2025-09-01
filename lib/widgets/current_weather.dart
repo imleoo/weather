@@ -58,7 +58,9 @@ class _CurrentWeatherState extends State<CurrentWeather>
   }
 
   void _stopAnimation() {
-    _animationController.stop();
+    if (_animationController.isAnimating) {
+      _animationController.stop();
+    }
   }
 
   @override
@@ -76,6 +78,8 @@ class _CurrentWeatherState extends State<CurrentWeather>
     return VisibilityDetector(
       key: Key('current_weather_${widget.currentCondition.weatherCode}'),
       onVisibilityChanged: (visibilityInfo) {
+        if (!mounted) return;
+        
         final wasVisible = _isVisible;
         _isVisible = visibilityInfo.visibleFraction > 0.5;
 
