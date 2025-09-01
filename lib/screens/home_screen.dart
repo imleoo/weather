@@ -9,7 +9,6 @@ import '../widgets/weather_selectors.dart';
 import '../l10n/app_localizations.dart';
 import 'city_search_screen.dart';
 import 'settings_screen.dart';
-import 'widget_test_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -85,17 +84,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 context,
                 MaterialPageRoute(
                   builder: (context) => const SettingsScreen(),
-                ),
-              );
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.widgets, color: Colors.white),
-            onPressed: () async {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const WidgetTestScreen(),
                 ),
               );
             },
