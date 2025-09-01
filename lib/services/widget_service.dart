@@ -3,13 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:home_widget/home_widget.dart';
 import 'package:workmanager/workmanager.dart';
 import '../models/fishing_weather_model.dart';
+import '../models/weather_model.dart';
 import '../providers/weather_provider.dart';
 
 /// 小部件服务，用于更新桌面小部件
 class WidgetService {
   static const String appGroupId = 'group.cn.leoobai.fishingweather';
   static const String androidWidgetName = 'FishingWeatherWidgetLargeProvider';
-  static const String iOSWidgetName = 'FishingWeatherWidget';
+  static const String iOSWidgetName = 'FishingWidget';
 
   // 后台任务名称
   static const String updateWidgetTask = 'updateFishingWidgetTask';
@@ -137,25 +138,56 @@ class WidgetService {
     }
   }
 
+  // 全局WeatherProvider实例，用于在应用内共享
+  static WeatherProvider? _globalWeatherProvider;
+
+  // 设置全局WeatherProvider实例
+  static void setGlobalWeatherProvider(WeatherProvider provider) {
+    _globalWeatherProvider = provider;
+  }
+
+  // 获取全局天气数据
+  static WeatherModel? _getGlobalWeatherData() {
+    return _globalWeatherProvider?.weatherData;
+  }
+
   /// 更新小部件数据
   static Future<void> updateWidgetData() async {
     try {
-      final weatherProvider = WeatherProvider();
-      // 使用IP定位快速获取天气数据
-      await weatherProvider
-          .fetchWeatherQuickly()
-          .timeout(const Duration(seconds: 30));
+      // 获取全局WeatherProvider实例或创建新实例
+      WeatherModel? weatherData;
 
-      if (weatherProvider.weatherData != null) {
-        final weatherData = weatherProvider.weatherData!;
+      // 尝试从全局状态获取现有天气数据
+      final globalWeatherData = _getGlobalWeatherData();
+
+      if (globalWeatherData != null) {
+        // 使用应用内现有的天气数据
+        weatherData = globalWeatherData;
+      } else {
+        // 如果没有现有数据（例如在后台任务中），则创建新实例并获取数据
+        final weatherProvider = WeatherProvider();
+        await weatherProvider
+            .fetchWeatherQuickly()
+            .timeout(const Duration(seconds: 30));
+        weatherData = weatherProvider.weatherData;
+      }
+
+      if (weatherData != null) {
         final currentCondition = weatherData.currentCondition;
 
-        // 获取当前小时的钓鱼适宜性
-        final currentHourly = weatherData.forecast.isNotEmpty
-            ? weatherData.forecast[0].hourly.firstWhere(
+        // 安全地获取当前小时的钓鱼适宜性
+        Hourly? currentHourly;
+        try {
+          final forecastList = weatherData.forecast;
+          if (forecastList.isNotEmpty && forecastList[0].hourly.isNotEmpty) {
+            currentHourly = forecastList[0].hourly.firstWhere(
                 (h) => int.parse(h.time) ~/ 100 == DateTime.now().hour,
-                orElse: () => weatherData.forecast[0].hourly.first)
-            : null;
+                orElse: () => forecastList[0].hourly.first);
+          }
+        } catch (e) {
+          debugPrint('获取当前小时天气数据失败: $e');
+          currentHourly = null;
+        }
 
         if (currentHourly != null) {
           // 评估钓鱼适宜性
@@ -190,6 +222,10 @@ class WidgetService {
           // 保存定位地址数据
           await HomeWidget.saveWidgetData<String>(
               'location', weatherData.nearestArea.areaName);
+
+          // 保存最后更新时间（iOS小部件需要）
+          await HomeWidget.saveWidgetData<int>(
+              'lastUpdated', DateTime.now().millisecondsSinceEpoch);
 
           // 更新小部件
           await HomeWidget.updateWidget(

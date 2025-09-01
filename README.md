@@ -1,16 +1,182 @@
-# weather
+# 钓鱼天气应用 (Fishing Weather App)
 
-A new Flutter project.
+一款基于Flutter开发的钓鱼天气预报应用，提供天气信息和钓鱼适宜度评估。
 
-## Getting Started
+## 应用概述
 
-This project is a starting point for a Flutter application.
+这是一个基于Flutter开发的钓鱼天气预报应用，主要功能是提供天气信息和钓鱼适宜度评估。应用支持中英文双语，可以通过城市名称、GPS定位或IP定位获取天气数据。
 
-A few resources to get you started if this is your first Flutter project:
+## 核心业务逻辑
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+### 钓鱼适宜度评估系统
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+应用的核心功能是评估特定时间和地点的钓鱼适宜度。评估基于以下气象因素：
+
+- **气压**：1005-1015 hPa最佳(+2分)，>1015 hPa次之(+1分)，<1005 hPa较差(-1分)
+- **天气状况**：晴好天气(+2分)，小雨/零星降雨(0分)，雾/薄雾(-1分)，大雨/恶劣天气(-2分)
+- **降水概率**：<30%(+2分)，30-60%(0分)，>60%(-1分)
+- **云量**：20-60%(+2分)，<20%或60-80%(0分)，>80%(-1分)
+- **风速**：2-10 km/h(+2分)，<2或10-15 km/h(0分)，>15 km/h(-2分)
+- **温度**：15-30°C(+2分)，<15°C或30-35°C(0分)，>35°C或极低温(-2分)
+- **湿度**：40-80%(+2分)，<40%或80-90%(0分)，>90%(-1分)
+- **能见度**：>5km(+2分)，2-5km(0分)，<2km(-2分)
+
+根据总分，钓鱼适宜度分为四个等级：
+- **极佳** (Excellent)：≥12分，绿色标识
+- **良好** (Good)：8-11分，蓝色标识
+- **一般** (Moderate)：4-7分，橙色标识
+- **较差** (Poor)：<4分，红色标识
+
+### 天气数据获取流程
+
+应用支持三种获取天气数据的方式：
+1. **IP定位**：最快速的方式，用于应用首次启动
+2. **GPS定位**：最精确的方式，用于用户手动刷新位置
+3. **城市名称搜索**：用户手动输入城市名称
+
+天气数据来源为wttr.in API，格式为JSON。
+
+### 缓存机制
+
+应用实现了两层缓存机制：
+1. **天气数据缓存**：缓存整个天气数据，减少网络请求
+2. **钓鱼适宜度评估缓存**：缓存评估结果，减少计算开销
+
+缓存使用SharedPreferences实现，IP定位缓存时间为30分钟，其他缓存时间可能更长。
+
+## 应用架构
+
+### 项目结构
+
+```
+lib/
+├── l10n/                 # 国际化资源
+├── models/               # 数据模型
+│   ├── fishing_weather_model.dart  # 钓鱼天气评估模型
+│   └── weather_model.dart          # 天气数据模型
+├── providers/            # 状态管理
+│   ├── weather_provider.dart       # 天气数据提供者
+│   └── settings_provider.dart      # 设置提供者
+├── screens/              # 页面
+│   ├── home_screen.dart           # 主页面
+│   ├── city_search_screen.dart    # 城市搜索页面
+│   └── settings_screen.dart       # 设置页面
+├── services/             # 服务
+│   ├── weather_service.dart        # 天气数据服务
+│   ├── weather_cache_service.dart  # 天气缓存服务
+│   ├── location_service.dart       # 位置服务
+│   ├── widget_service.dart         # 小部件服务(用于主屏幕小部件)
+│   └── ad_service.dart             # 广告服务
+├── utils/                # 工具类
+│   ├── weather_parser.dart         # 天气数据解析
+│   ├── weather_icons.dart          # 天气图标
+│   └── app_lifecycle_manager.dart  # 应用生命周期管理
+├── widgets/              # UI组件
+│   ├── current_weather.dart        # 当前天气组件
+│   ├── fishing_daily_forecast.dart # 钓鱼预报组件
+│   └── weather_selectors.dart      # 天气选择器组件
+└── main.dart             # 应用入口
+```
+
+### 状态管理
+
+应用使用Provider包进行状态管理：
+- **WeatherProvider**：管理天气数据的获取、存储和更新
+- **SettingsProvider**：管理用户设置，如语言偏好
+
+### 数据流
+
+1. 用户打开应用 → 应用初始化 → 通过IP定位快速获取天气
+2. 用户可以通过GPS定位或城市搜索更新天气数据
+3. 获取到天气数据后，应用计算钓鱼适宜度并展示结果
+4. 用户可以查看详细的钓鱼建议和天气预报
+
+## 关键功能实现
+
+### 钓鱼适宜度评估
+
+`FishingWeatherModel`类负责评估钓鱼适宜度，主要方法：
+- `evaluateAsync`：异步评估，在后台线程执行
+- `evaluateAsyncWithCache`：带缓存的异步评估
+- `evaluate`：同步评估
+
+评估逻辑在`_evaluateInternal`方法中实现，包括各项气象因素的评分和总分计算。
+
+### 天气数据获取
+
+`WeatherService`类负责获取天气数据，主要方法：
+- `getWeatherByCity`：通过城市名称获取天气
+- `getWeatherByLocation`：通过经纬度获取天气
+- `getWeatherByIpLocation`：通过IP定位获取天气
+
+所有方法都实现了缓存机制，先尝试从缓存获取数据，如果缓存不存在或已过期，则从网络获取。
+
+### UI展示
+
+主界面(`HomeScreen`)包含：
+- 顶部导航栏：显示当前城市、搜索按钮、设置按钮和定位按钮
+- 当前天气展示：温度、天气状况、钓鱼适宜度等
+- 未来天气预报：显示未来几天的天气和钓鱼适宜度
+
+UI根据天气状况动态调整背景颜色，提供良好的视觉体验。
+
+## 特色功能
+
+1. **钓鱼适宜度评估**：基于多项气象因素综合评估钓鱼适宜度
+2. **详细钓鱼建议**：根据评估结果提供具体的钓鱼建议
+3. **多语言支持**：支持中英文双语界面
+4. **多种定位方式**：支持IP定位、GPS定位和城市搜索
+5. **离线缓存**：实现天气数据和评估结果的缓存，减少网络请求和计算开销
+6. **动态UI**：根据天气状况动态调整界面风格
+7. **主屏幕小部件**：支持iOS和Android平台，提供天气和钓鱼适宜度信息的快速查看
+
+## 技术亮点
+
+1. **异步计算**：使用`compute`函数在后台线程执行钓鱼适宜度评估，避免阻塞UI线程
+2. **多层缓存**：实现天气数据和评估结果的缓存，优化性能和用户体验
+3. **错误处理**：完善的错误处理机制，提供友好的错误提示
+4. **响应式UI**：使用Provider实现响应式UI更新
+5. **国际化**：支持多语言，便于全球用户使用
+6. **平台特定功能**：针对iOS和Android平台提供主屏幕小部件功能，使用SwiftUI实现iOS小部件
+
+## 业务流程
+
+1. **应用启动流程**：
+   - 初始化Flutter绑定
+   - 初始化国际化资源
+   - 初始化小部件服务(可能失败，但不影响应用运行)
+   - 创建并运行应用实例
+
+2. **天气数据获取流程**：
+   - 应用启动时通过IP定位快速获取天气
+   - 用户可以通过GPS定位或城市搜索更新天气
+   - 获取数据时先检查缓存，缓存不存在或已过期则从网络获取
+   - 网络请求成功后更新缓存
+
+3. **钓鱼适宜度评估流程**：
+   - 获取到天气数据后，提取小时级天气数据
+   - 检查评估结果缓存，如果存在且未过期则直接使用
+   - 否则在后台线程计算评估结果
+   - 评估完成后更新UI并缓存结果
+
+4. **用户交互流程**：
+   - 用户可以下拉刷新获取最新天气
+   - 用户可以点击定位按钮使用GPS定位
+   - 用户可以点击搜索按钮搜索城市
+   - 用户可以点击设置按钮调整应用设置
+
+## 开发环境
+
+- Flutter SDK
+- Dart SDK
+- Android Studio / VS Code
+- iOS模拟器 / Android模拟器
+
+## 依赖项
+
+- provider: 状态管理
+- http: 网络请求
+- shared_preferences: 本地存储
+- geolocator: 地理位置
+- flutter_localizations: 国际化支持
+- home_widget: 主屏幕小部件支持

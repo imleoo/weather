@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/weather_model.dart';
 import '../models/fishing_weather_model.dart';
-import '../utils/date_formatter.dart';
 import '../l10n/app_localizations.dart';
 
 class FishingWeatherDetails extends StatelessWidget {

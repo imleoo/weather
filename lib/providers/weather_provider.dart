@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../models/weather_model.dart';
 import '../services/weather_service.dart';
 import '../services/location_service.dart';
+import '../services/widget_service.dart';
 
 class WeatherProvider with ChangeNotifier {
   WeatherModel? _weatherData;
@@ -23,10 +24,15 @@ class WeatherProvider with ChangeNotifier {
     _error = null;
 
     try {
-      final weather = await _weatherService.getWeatherByCity(city).timeout(const Duration(seconds: 60));
+      final weather = await _weatherService
+          .getWeatherByCity(city)
+          .timeout(const Duration(seconds: 60));
       _weatherData = weather;
       _city = city;
       _error = null;
+
+      // 更新小部件数据
+      await WidgetService.updateWidgetData();
     } on TimeoutException {
       _error = '获取天气数据超时，请检查网络连接';
     } catch (e) {
@@ -43,10 +49,15 @@ class WeatherProvider with ChangeNotifier {
 
     try {
       // 首先尝试IP定位（最快）
-      final weather = await _weatherService.getWeatherByIpLocation().timeout(const Duration(seconds: 20));
+      final weather = await _weatherService
+          .getWeatherByIpLocation()
+          .timeout(const Duration(seconds: 20));
       _weatherData = weather;
       _city = weather.nearestArea.areaName;
       _error = null;
+
+      // 更新小部件数据
+      await WidgetService.updateWidgetData();
     } on TimeoutException {
       _error = '获取天气数据超时，请检查网络连接';
     } catch (e) {
@@ -61,15 +72,22 @@ class WeatherProvider with ChangeNotifier {
     _error = null;
 
     try {
-      final position = await _locationService.getCurrentLocation().timeout(const Duration(seconds: 60));
+      final position = await _locationService
+          .getCurrentLocation()
+          .timeout(const Duration(seconds: 60));
       if (position != null) {
-        final weather = await _weatherService.getWeatherByLocation(
-          position.latitude,
-          position.longitude,
-        ).timeout(const Duration(seconds: 60));
+        final weather = await _weatherService
+            .getWeatherByLocation(
+              position.latitude,
+              position.longitude,
+            )
+            .timeout(const Duration(seconds: 60));
         _weatherData = weather;
         _city = weather.nearestArea.areaName;
         _error = null;
+
+        // 更新小部件数据
+        await WidgetService.updateWidgetData();
       }
     } on TimeoutException {
       _error = '获取天气数据超时，请检查网络连接';

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/weather_provider.dart';
 import '../models/weather_model.dart';
-import '../l10n/app_localizations.dart';
 
 // 选择器组件 - 只在城市名称变化时重建
 class CitySelector extends StatelessWidget {

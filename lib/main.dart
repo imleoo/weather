@@ -30,7 +30,13 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (context) => WeatherProvider()),
+        ChangeNotifierProvider(create: (context) {
+          // 创建WeatherProvider实例
+          final weatherProvider = WeatherProvider();
+          // 设置全局实例，供小部件服务使用
+          WidgetService.setGlobalWeatherProvider(weatherProvider);
+          return weatherProvider;
+        }),
         ChangeNotifierProvider(create: (context) => SettingsProvider()),
       ],
       child: Consumer<SettingsProvider>(
