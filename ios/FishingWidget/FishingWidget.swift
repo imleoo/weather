@@ -236,3 +236,10 @@ struct FishingWidget: Widget {
         .supportedFamilies([.systemSmall, .systemMedium, .systemLarge])
     }
 }
+
+@main
+struct FishingWidgetBundle: WidgetBundle {
+    var body: some Widget {
+        FishingWidget()
+    }
+}
