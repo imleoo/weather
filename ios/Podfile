@@ -53,49 +53,14 @@ post_install do |installer|
   installer.pods_project.targets.each do |target|
     flutter_additional_ios_build_settings(target)
     
-    # 添加权限描述
-    target.build_configurations.each do |config|
-      # 位置权限
-      config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] ||= [
-        '$(inherited)',
-        'PERMISSION_LOCATION=1',
-      ]
-      
-      # 特殊处理Widget Extension
-      if target.name == 'FishingWidget'
+    # 特殊处理Widget Extension
+    if target.name == 'FishingWidget'
+      target.build_configurations.each do |config|
         # 禁用bitcode以匹配Flutter设置
         config.build_settings['ENABLE_BITCODE'] = 'NO'
         # 确保与主应用使用相同的Swift版本
         config.build_settings['SWIFT_VERSION'] = '5.0'
-        
-        # 排除不兼容的框架
-        if config.build_settings['FRAMEWORK_SEARCH_PATHS']
-          # 确保不包含workmanager相关的框架路径
-          config.build_settings['FRAMEWORK_SEARCH_PATHS'] = config.build_settings['FRAMEWORK_SEARCH_PATHS'].reject { |path| path.include?('workmanager') }
-        end
-        
-        # 排除不兼容的头文件路径
-        if config.build_settings['HEADER_SEARCH_PATHS']
-          # 确保不包含workmanager相关的头文件路径
-          config.build_settings['HEADER_SEARCH_PATHS'] = config.build_settings['HEADER_SEARCH_PATHS'].reject { |path| path.include?('workmanager') }
-        end
       end
     end
-  end
-  
-  # 修复依赖循环问题
-  installer.aggregate_targets.each do |aggregate_target|
-    aggregate_target.user_project.native_targets.each do |native_target|
-      if native_target.name == 'Runner'
-        # 修改构建阶段顺序，确保Info.plist处理在复制扩展之前完成
-        phases = native_target.build_phases
-        copy_phase = phases.find { |phase| phase.display_name.include?('Copy') && phase.display_name.include?('FishingWidget.appex') }
-        if copy_phase
-          # 将复制阶段移到最后
-          phases.move(copy_phase, phases.count - 1)
-        end
-      end
-    end
-    aggregate_target.user_project.save
   end
 end
