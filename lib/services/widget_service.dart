@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:home_widget/home_widget.dart';
 import 'package:workmanager/workmanager.dart';
@@ -193,7 +194,21 @@ class WidgetService {
           // 评估钓鱼适宜性
           final fishingWeather = FishingWeatherModel.evaluate(currentHourly);
 
-          // 更新小部件数据
+          // 创建iOS小部件需要的WeatherData对象
+          final widgetData = {
+            'temperature': '${currentCondition.tempC}°C',
+            'weatherCondition': currentCondition.weatherDesc,
+            'location': weatherData.nearestArea.areaName,
+            'fishingScore': fishingWeather.score,
+            'fishingAdvice': _getSuitabilityText(fishingWeather.suitability),
+            'updateTime': _formatUpdateTime(DateTime.now()),
+          };
+
+          // 将数据保存为JSON格式，供iOS小部件使用
+          await HomeWidget.saveWidgetData<String>(
+              'fishing_weather_data', jsonEncode(widgetData));
+
+          // 同时保存单独的字段供Android使用（保持兼容性）
           await HomeWidget.saveWidgetData<String>(
               'weatherCondition', currentCondition.weatherDesc);
 
@@ -268,6 +283,22 @@ class WidgetService {
         return 'Poor';
       default:
         return 'Unknown';
+    }
+  }
+
+  /// 格式化更新时间
+  static String _formatUpdateTime(DateTime time) {
+    final now = DateTime.now();
+    final difference = now.difference(time);
+    
+    if (difference.inMinutes < 1) {
+      return '刚刚';
+    } else if (difference.inMinutes < 60) {
+      return '${difference.inMinutes}分钟前';
+    } else if (difference.inHours < 24) {
+      return '${difference.inHours}小时前';
+    } else {
+      return '${difference.inDays}天前';
     }
   }
 }

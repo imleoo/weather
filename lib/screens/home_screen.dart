@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/weather_provider.dart';
+import '../services/widget_service.dart';
 import '../utils/weather_icons.dart';
 import '../widgets/current_weather.dart';
 import '../widgets/fishing_daily_forecast.dart';
@@ -8,6 +9,7 @@ import '../widgets/weather_selectors.dart';
 import '../l10n/app_localizations.dart';
 import 'city_search_screen.dart';
 import 'settings_screen.dart';
+import 'widget_test_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -83,6 +85,17 @@ class _HomeScreenState extends State<HomeScreen> {
                 context,
                 MaterialPageRoute(
                   builder: (context) => const SettingsScreen(),
+                ),
+              );
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.widgets, color: Colors.white),
+            onPressed: () async {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const WidgetTestScreen(),
                 ),
               );
             },

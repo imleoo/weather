@@ -37,16 +37,16 @@ target 'Runner' do
   end
 end
 
-# Widget Extension目标 - 简化版本，避免与主应用的插件冲突
+# Widget Extension - 独立配置，避免继承主应用的插件依赖
 target 'FishingWidget' do
   use_frameworks!
   use_modular_headers!
   
-  # 基础Flutter pod
+  # 只包含必要的依赖，不继承主应用的插件
   pod 'Flutter', :path => 'Flutter'
   
-  # 我们不再手动添加插件，而是使用一个更简单的方法
-  # 这将避免与Runner目标中的插件冲突
+  # 添加widget需要的home_widget插件
+  pod 'home_widget', :path => '.symlinks/plugins/home_widget/ios'
 end
 
 post_install do |installer|
