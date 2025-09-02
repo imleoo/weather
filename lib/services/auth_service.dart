@@ -1,12 +1,17 @@
 import 'dart:convert';
+import 'dart:math' as Math;
+import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/user_model.dart';
+import '../utils/app_logger.dart';
+import '../screens/login_screen.dart';
 
 class AuthService {
   static const String _baseUrl = 'http://192.168.28.126:8000/api'; // 后端API地址
   static const String _tokenKey = 'auth_token';
   static const String _userKey = 'user_data';
+  static const String _loginTimeKey = 'login_time';
 
   static String? _authToken;
   static User? _currentUser;
@@ -171,9 +176,11 @@ class AuthService {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_tokenKey);
     await prefs.remove(_userKey);
+    await prefs.remove(_loginTimeKey);
 
     _authToken = null;
     _currentUser = null;
+    AppLogger.info('用户已登出', tag: 'AUTH');
   }
 
   // 获取当前的认证token
@@ -191,6 +198,9 @@ class AuthService {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_tokenKey, token);
     await prefs.setString(_userKey, jsonEncode(user.toJson()));
+    // 添加登录时间戳，用于token过期检查
+    await prefs.setInt(_loginTimeKey, DateTime.now().millisecondsSinceEpoch);
+    AppLogger.info('用户登录信息已保存', details: {'email': user.email}, tag: 'AUTH');
   }
 
   // 保存用户数据
@@ -202,6 +212,10 @@ class AuthService {
   // 获取认证头部
   static Future<Map<String, String>> getAuthHeaders() async {
     final token = await _getAuthToken();
+    print('=== 获取认证头部 ===');
+    print('Token exists: ${token != null}');
+    print('Token length: ${token?.length}');
+    print('Token prefix: ${token?.substring(0, Math.min(10, token?.length ?? 0))}');
     return {
       'Content-Type': 'application/json',
       if (token != null) 'Authorization': 'Bearer $token',
@@ -211,6 +225,41 @@ class AuthService {
   // 检查是否已登录
   static Future<bool> isLoggedIn() async {
     final token = await _getAuthToken();
+    // 只要有token就认为已登录，不设置过期时间
     return token != null;
+  }
+
+  // 检查登录状态并处理登录跳转
+  static Future<bool> ensureLoggedIn(BuildContext context, {VoidCallback? onSuccess}) async {
+    final isLoggedIn = await AuthService.isLoggedIn();
+    print('=== 检查登录状态: $isLoggedIn ===');
+    
+    if (!isLoggedIn) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('请先登录')),
+      );
+      
+      // 延迟跳转，让用户看到提示
+      Future.delayed(const Duration(milliseconds: 500), () {
+        if (context.mounted) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const LoginScreen(),
+            ),
+          ).then((result) {
+            // 登录成功后执行回调
+            if (result != null && onSuccess != null) {
+              print('=== 登录成功，执行回调 ===');
+              onSuccess();
+            }
+          });
+        }
+      });
+      
+      return false;
+    }
+    
+    return true;
   }
 }

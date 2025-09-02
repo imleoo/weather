@@ -11,6 +11,7 @@ import '../l10n/app_localizations.dart';
 import '../widgets/fishing_map_widget.dart';
 import '../utils/app_logger.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'login_screen.dart';
 
 class FishingSpotsTab extends StatefulWidget {
   const FishingSpotsTab({super.key});
@@ -88,10 +89,29 @@ class _FishingSpotsTabState extends State<FishingSpotsTab> with SingleTickerProv
         });
       }
     } catch (e) {
+      print('加载附近钓点失败: $e');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('加载附近钓点失败: $e')),
-        );
+        // 检查是否是认证错误
+        if (e.toString().contains('登录已过期')) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('登录已过期，请重新登录')),
+          );
+          // 延迟后跳转到登录页面
+          Future.delayed(const Duration(seconds: 1), () {
+            if (mounted) {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => LoginScreen(),
+                ),
+              );
+            }
+          });
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('加载附近钓点失败: $e')),
+          );
+        }
       }
     } finally {
       setState(() {
@@ -183,6 +203,7 @@ class _FishingSpotsTabState extends State<FishingSpotsTab> with SingleTickerProv
       // 地图视图
       return FishingMapWidget(
         fishingSpots: _nearbySpots,
+        currentLocation: _currentLocation,
         onSpotTap: (spot) {
           _showSpotDetails(spot);
         },
@@ -346,7 +367,22 @@ class _FishingSpotsTabState extends State<FishingSpotsTab> with SingleTickerProv
   }
 
   void _shareCurrentSpot() async {
+    print('=== 分享按钮被点击 ===');
+    // 检查是否已登录，如果未登录会自动跳转到登录页面
+    // 登录成功后会自动执行分享
+    await AuthService.ensureLoggedIn(context, onSuccess: () {
+      print('=== 登录检查通过，准备分享 ===');
+      _shareCurrentSpotInternal();
+    });
+  }
+
+  void _shareCurrentSpotInternal() async {
+    print('=== 开始分享钓点 ===');
+    print('当前位置: $_currentLocation');
+    print('钓点描述: "${_spotDescription.trim()}"');
+    
     if (_currentLocation == null) {
+      print('错误: 当前位置为空');
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('无法获取当前位置，请检查定位权限')),
       );
@@ -382,9 +418,28 @@ class _FishingSpotsTabState extends State<FishingSpotsTab> with SingleTickerProv
       });
       _loadNearbySpots();
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('分享失败: ${e.toString()}')),
-      );
+      print('分享钓点失败: $e');
+      // 检查是否是认证错误
+      if (e.toString().contains('登录已过期')) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('登录已过期，请重新登录')),
+        );
+        // 延迟后跳转到登录页面
+        Future.delayed(const Duration(seconds: 1), () {
+          if (mounted) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const LoginScreen(),
+              ),
+            );
+          }
+        });
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('分享失败: ${e.toString()}')),
+        );
+      }
     } finally {
       setState(() {
         _isLoading = false;

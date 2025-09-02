@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
+import 'dart:io' show Platform;
 import '../providers/weather_provider.dart';
 import '../models/fish_catch_model.dart';
 import '../services/api_service.dart';
+import '../services/auth_service.dart';
 import '../services/social_share_service.dart';
 import '../l10n/app_localizations.dart';
 import '../utils/app_logger.dart';
@@ -24,7 +26,7 @@ class _ShareTabState extends State<ShareTab> with SingleTickerProviderStateMixin
   final TextEditingController _fishTypeController = TextEditingController();
   final TextEditingController _weightController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
-  File? _selectedImage;
+  dynamic _selectedImage;
   final ImagePicker _picker = ImagePicker();
 
   @override
@@ -164,10 +166,25 @@ class _ShareTabState extends State<ShareTab> with SingleTickerProviderStateMixin
                     child: _selectedImage != null
                         ? ClipRRect(
                             borderRadius: BorderRadius.circular(8),
-                            child: Image.file(
-                              _selectedImage!,
-                              fit: BoxFit.cover,
-                            ),
+                            child: Platform.isAndroid || Platform.isIOS
+                                ? Image.file(
+                                    _selectedImage!,
+                                    fit: BoxFit.cover,
+                                  )
+                                : Image.network(
+                                    _selectedImage!.path,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (context, error, stackTrace) {
+                                      return const Column(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          Icon(Icons.broken_image, size: 48, color: Colors.grey),
+                                          SizedBox(height: 8),
+                                          Text('图片预览不可用', style: TextStyle(color: Colors.grey)),
+                                        ],
+                                      );
+                                    },
+                                  ),
                           )
                         : InkWell(
                             onTap: _pickImage,
@@ -419,7 +436,12 @@ class _ShareTabState extends State<ShareTab> with SingleTickerProviderStateMixin
       
       if (image != null) {
         setState(() {
-          _selectedImage = File(image.path);
+          // 在Web平台上直接使用XFile，在移动端创建File对象
+          if (Platform.isAndroid || Platform.isIOS) {
+            _selectedImage = File(image.path);
+          } else {
+            _selectedImage = image;
+          }
         });
       }
     } catch (e) {
@@ -430,6 +452,18 @@ class _ShareTabState extends State<ShareTab> with SingleTickerProviderStateMixin
   }
 
   void _shareFishCatch() async {
+    // 检查是否已登录，如果未登录会自动跳转到登录页面
+    // 登录成功后会自动执行分享
+    if (!await AuthService.ensureLoggedIn(context, onSuccess: () {
+      _shareFishCatchInternal();
+    })) {
+      return;
+    }
+    
+    _shareFishCatchInternal();
+  }
+
+  void _shareFishCatchInternal() async {
     if (_fishTypeController.text.isEmpty || _weightController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(AppLocalizations.pleaseFillRequired)),
@@ -489,14 +523,24 @@ class _ShareTabState extends State<ShareTab> with SingleTickerProviderStateMixin
     }
   }
 
-  void _likeFishCatch(int fishCatchId) {
+  void _likeFishCatch(int fishCatchId) async {
+    // 检查是否已登录，如果未登录会自动跳转到登录页面
+    if (!await AuthService.ensureLoggedIn(context)) {
+      return;
+    }
+    
     // TODO: 实现点赞功能
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('点赞功能待实现')),
     );
   }
 
-  void _commentOnFishCatch(FishCatch fishCatch) {
+  void _commentOnFishCatch(FishCatch fishCatch) async {
+    // 检查是否已登录，如果未登录会自动跳转到登录页面
+    if (!await AuthService.ensureLoggedIn(context)) {
+      return;
+    }
+    
     // TODO: 实现评论功能
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('评论功能待实现')),

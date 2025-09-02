@@ -43,6 +43,16 @@ async def startup_event():
 async def shutdown_event():
     backend_logger.info("钓鱼天气后端服务关闭")
 
+# CORS配置 - 必须在其他中间件之前添加
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # 生产环境应该限制为特定域名
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+    expose_headers=["*"],  # 暴露所有响应头
+)
+
 # 请求日志中间件
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
@@ -51,21 +61,39 @@ async def log_requests(request: Request, call_next):
     # 获取客户端IP
     client_host = request.client.host if request.client else "unknown"
     
-    # 获取用户ID（如果有）
+    # 记录请求详情
+    backend_logger.info(f"收到请求: {request.method} {request.url.path}")
+    backend_logger.info(f"来源IP: {client_host}")
+    
+    # 获取并记录认证信息
     user_id = None
     auth_header = request.headers.get("authorization")
-    if auth_header and auth_header.startswith("Bearer "):
-        try:
-            token = auth_header.split(" ")[1]
-            token_data = verify_token(token)
-            user_id = token_data.get("user_id")
-        except:
-            pass
+    if auth_header:
+        backend_logger.info(f"Authorization头: {auth_header[:50]}...")  # 只记录前50个字符
+        if auth_header.startswith("Bearer "):
+            try:
+                token = auth_header.split(" ")[1]
+                backend_logger.info(f"正在验证Token: {token[:20]}...")
+                token_data = verify_token(token)
+                user_id = token_data.get("user_id")
+                backend_logger.info(f"Token验证成功，用户ID: {user_id}")
+            except Exception as e:
+                backend_logger.error(f"Token验证失败: {str(e)}")
+    else:
+        backend_logger.info("请求没有Authorization头")
     
-    response = await call_next(request)
+    # 处理请求
+    try:
+        response = await call_next(request)
+    except Exception as e:
+        backend_logger.error(f"处理请求时出错: {str(e)}")
+        raise
     
     # 计算响应时间
     process_time = time.time() - start_time
+    
+    # 记录响应状态
+    backend_logger.info(f"响应状态: {response.status_code}")
     
     # 记录API调用日志
     log_api_call(
@@ -79,15 +107,6 @@ async def log_requests(request: Request, call_next):
     )
     
     return response
-
-# CORS配置
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],  # 生产环境应该限制为特定域名
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
 
 # 静态文件服务（用于图片访问）
 app.mount("/uploads", StaticFiles(directory=settings.UPLOAD_DIR), name="uploads")

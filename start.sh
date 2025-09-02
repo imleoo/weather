@@ -136,7 +136,7 @@ start_frontend() {
     flutter pub get >> "$FRONTEND_LOG" 2>&1
     
     # 启动前端服务（开发模式）
-    nohup flutter run --debug >> "$FRONTEND_LOG" 2>&1 &
+    nohup flutter run -d chrome --debug >> "$FRONTEND_LOG" 2>&1 &
     local pid=$!
     echo $pid > "$FRONTEND_PID_FILE"
     
@@ -145,6 +145,13 @@ start_frontend() {
     
     if is_frontend_running; then
         print_message $GREEN "前端服务启动成功 (PID: $pid)"
+        
+        # 等待并提取Chrome端口
+        sleep 15
+        local chrome_port=$(grep -o "http://127.0.0.1:[0-9]*" "$FRONTEND_LOG" | tail -1 | cut -d':' -f3)
+        if [ ! -z "$chrome_port" ] && [ "$chrome_port" != "" ]; then
+            print_message $GREEN "Chrome地址: http://localhost:$chrome_port"
+        fi
     else
         print_message $RED "前端服务启动失败，请查看日志: $FRONTEND_LOG"
         return 1

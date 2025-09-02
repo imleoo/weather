@@ -11,6 +11,7 @@ class FishingMapWidget extends StatefulWidget {
   final Function(FishingSpot)? onSpotTap;
   final bool showCurrentLocation;
   final Function(LatLng)? onMapTap;
+  final LatLng? currentLocation;
 
   const FishingMapWidget({
     super.key,
@@ -18,6 +19,7 @@ class FishingMapWidget extends StatefulWidget {
     this.onSpotTap,
     this.showCurrentLocation = true,
     this.onMapTap,
+    this.currentLocation,
   });
 
   @override
@@ -33,8 +35,17 @@ class _FishingMapWidgetState extends State<FishingMapWidget> {
   @override
   void initState() {
     super.initState();
-    _getCurrentLocation();
-    _updateMarkers();
+    // If currentLocation is provided, use it instead of getting location
+    if (widget.currentLocation != null) {
+      setState(() {
+        _currentLocation = widget.currentLocation;
+        _isLoadingLocation = false;
+      });
+      _updateMarkers();
+    } else {
+      _getCurrentLocation();
+      _updateMarkers();
+    }
   }
 
   @override

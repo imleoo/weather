@@ -30,11 +30,23 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
   bool _showLoginPassword = false;
   bool _showRegisterPassword = false;
   bool _showConfirmPassword = false;
+  VoidCallback? _onSuccess;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    
+    // 获取传递的参数
+    final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+    if (args != null) {
+      _onSuccess = args['onSuccess'] as VoidCallback?;
+    }
   }
 
   @override
@@ -420,6 +432,9 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('${AppLocalizations.loginSuccess}, ${user.nickname}!')),
         );
+        
+        // 执行成功回调
+        _onSuccess?.call();
       }
     } catch (e) {
       if (mounted) {

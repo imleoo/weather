@@ -1,12 +1,29 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
+import 'package:image_picker/image_picker.dart';
 import '../models/fishing_spot_model.dart';
 import '../models/fish_catch_model.dart';
 import 'auth_service.dart';
 
 class ApiService {
   static const String _baseUrl = 'http://192.168.28.126:8000/api'; // 后端API地址
+
+  // 处理HTTP响应，包括401错误
+  static dynamic _handleResponse(http.Response response) {
+    if (response.statusCode == 401) {
+      // 清除无效的认证信息
+      AuthService.logout();
+      throw Exception('登录已过期，请重新登录');
+    }
+    
+    final data = jsonDecode(response.body);
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      return data;
+    } else {
+      throw Exception(data['message'] ?? '请求失败');
+    }
+  }
 
   // 获取附近的钓点
   static Future<List<FishingSpot>> getNearbyFishingSpots({
@@ -21,16 +38,11 @@ class ApiService {
       headers: headers,
     );
 
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      final spots = (data['spots'] as List)
-          .map((json) => FishingSpot.fromJson(json))
-          .toList();
-      return spots;
-    } else {
-      final errorData = jsonDecode(response.body);
-      throw Exception(errorData['message'] ?? '获取附近钓点失败');
-    }
+    final data = _handleResponse(response);
+    final spots = (data['spots'] as List)
+        .map((json) => FishingSpot.fromJson(json))
+        .toList();
+    return spots;
   }
 
   // 分享当前钓点
@@ -41,9 +53,13 @@ class ApiService {
     required double longitude,
   }) async {
     final headers = await AuthService.getAuthHeaders();
+    print('=== 分享钓点请求 ===');
+    print('URL: $_baseUrl/fishing-spots/');
+    print('Headers: $headers');
+    print('Has Authorization: ${headers.containsKey('Authorization')}');
     
     final response = await http.post(
-      Uri.parse('$_baseUrl/fishing-spots'),
+      Uri.parse('$_baseUrl/fishing-spots/'),
       headers: headers,
       body: jsonEncode({
         'name': name,
@@ -53,13 +69,8 @@ class ApiService {
       }),
     );
 
-    if (response.statusCode == 201) {
-      final data = jsonDecode(response.body);
-      return FishingSpot.fromJson(data['fishing_spot']);
-    } else {
-      final errorData = jsonDecode(response.body);
-      throw Exception(errorData['message'] ?? '分享钓点失败');
-    }
+    final data = _handleResponse(response);
+    return FishingSpot.fromJson(data['fishing_spot']);
   }
 
   // 获取鱼获分享列表
@@ -94,7 +105,7 @@ class ApiService {
     required double latitude,
     required double longitude,
     required String locationName,
-    File? imageFile,
+    dynamic imageFile,
   }) async {
     final headers = await AuthService.getAuthHeaders();
     
@@ -252,7 +263,7 @@ class ApiService {
   }
 
   // 上传图片（私有方法）
-  static Future<String> _uploadImage(File imageFile) async {
+  static Future<String> _uploadImage(dynamic imageFile) async {
     final headers = await AuthService.getAuthHeaders();
     
     final request = http.MultipartRequest(
@@ -261,12 +272,27 @@ class ApiService {
     );
     
     request.headers.addAll(headers);
-    request.files.add(
-      await http.MultipartFile.fromPath(
-        'image',
-        imageFile.path,
-      ),
-    );
+    
+    // 根据平台处理图片文件
+    if (imageFile is XFile) {
+      // Web平台 - XFile
+      final bytes = await imageFile.readAsBytes();
+      request.files.add(
+        http.MultipartFile.fromBytes(
+          'image',
+          bytes,
+          filename: imageFile.name,
+        ),
+      );
+    } else {
+      // 移动端 - File
+      request.files.add(
+        await http.MultipartFile.fromPath(
+          'image',
+          imageFile.path,
+        ),
+      );
+    }
 
     final streamedResponse = await request.send();
     final response = await http.Response.fromStream(streamedResponse);
