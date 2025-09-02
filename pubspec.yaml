@@ -27,6 +27,12 @@ dependencies:
   home_widget: ^0.8.0
   workmanager: ^0.9.0+2
   visibility_detector: ^0.4.0+2
+  # 地图相关
+  flutter_map: ^7.0.2
+  latlong2: ^0.9.1
+  # 分享相关
+  share_plus: ^7.2.2
+  url_launcher: ^6.2.5
 
 dev_dependencies:
   flutter_test:

@@ -3,7 +3,9 @@ import 'package:provider/provider.dart';
 import '../providers/weather_provider.dart';
 import '../models/fish_catch_model.dart';
 import '../services/api_service.dart';
+import '../services/social_share_service.dart';
 import '../l10n/app_localizations.dart';
+import '../utils/app_logger.dart';
 import 'dart:io';
 
 class ShareTab extends StatefulWidget {
@@ -379,6 +381,23 @@ class _ShareTabState extends State<ShareTab> with SingleTickerProviderStateMixin
                       icon: const Icon(Icons.comment_outlined, color: Colors.grey),
                       label: Text('${fishCatch.comments}'),
                     ),
+                    TextButton.icon(
+                      onPressed: () {
+                        SocialShareService.showShareOptions(
+                          context: context,
+                          shareType: 'fish_catch',
+                          shareData: {
+                            'fishType': fishCatch.fishType,
+                            'weight': fishCatch.weight,
+                            'description': fishCatch.description,
+                            'location': fishCatch.locationName,
+                            'imageUrl': fishCatch.imageUrl,
+                          },
+                        );
+                      },
+                      icon: const Icon(Icons.share, color: Colors.grey),
+                      label: const Text('分享'),
+                    ),
                   ],
                 ),
               ],
@@ -435,6 +454,20 @@ class _ShareTabState extends State<ShareTab> with SingleTickerProviderStateMixin
       
       // 切换到社区分享标签页
       _tabController.animateTo(1);
+      
+      // 显示分享选项
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        SocialShareService.showShareOptions(
+          context: context,
+          shareType: 'fish_catch',
+          shareData: {
+            'fishType': _fishTypeController.text,
+            'weight': double.tryParse(_weightController.text) ?? 0,
+            'description': _descriptionController.text,
+            'location': location?.areaName ?? '',
+          },
+        );
+      });
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('${AppLocalizations.shareFailed}: $e')),

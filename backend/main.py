@@ -1,23 +1,27 @@
-from fastapi import FastAPI, Depends, HTTPException, status, UploadFile, File
+from fastapi import FastAPI, Depends, HTTPException, status, UploadFile, File, Request
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from datetime import timedelta
 import uvicorn
+import time
 
 from database import engine, get_db
 from models import Base
 from auth import verify_token
 from config import settings
 from routers import auth_router, fishing_spots_router, fish_catches_router, upload_router, users_router
+from logging_config import backend_logger, log_api_call
 import os
 
 # 创建数据库表
 Base.metadata.create_all(bind=engine)
+backend_logger.info("数据库表创建成功")
 
 # 创建上传目录
 os.makedirs(settings.UPLOAD_DIR, exist_ok=True)
+backend_logger.info(f"上传目录创建成功: {settings.UPLOAD_DIR}")
 
 # 创建FastAPI应用
 app = FastAPI(
@@ -25,6 +29,56 @@ app = FastAPI(
     description="钓鱼天气应用的后端API服务",
     version="1.0.0",
 )
+
+# 应用启动事件
+@app.on_event("startup")
+async def startup_event():
+    backend_logger.info("钓鱼天气后端服务启动")
+    backend_logger.info(f"服务地址: {settings.HOST}:{settings.PORT}")
+    backend_logger.info(f"数据库连接: {settings.DATABASE_URL}")
+    backend_logger.info(f"上传目录: {settings.UPLOAD_DIR}")
+
+# 应用关闭事件
+@app.on_event("shutdown")
+async def shutdown_event():
+    backend_logger.info("钓鱼天气后端服务关闭")
+
+# 请求日志中间件
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    start_time = time.time()
+    
+    # 获取客户端IP
+    client_host = request.client.host if request.client else "unknown"
+    
+    # 获取用户ID（如果有）
+    user_id = None
+    auth_header = request.headers.get("authorization")
+    if auth_header and auth_header.startswith("Bearer "):
+        try:
+            token = auth_header.split(" ")[1]
+            token_data = verify_token(token)
+            user_id = token_data.get("user_id")
+        except:
+            pass
+    
+    response = await call_next(request)
+    
+    # 计算响应时间
+    process_time = time.time() - start_time
+    
+    # 记录API调用日志
+    log_api_call(
+        logger=backend_logger,
+        method=request.method,
+        endpoint=str(request.url.path),
+        status_code=response.status_code,
+        response_time=process_time,
+        user_id=user_id,
+        ip_address=client_host
+    )
+    
+    return response
 
 # CORS配置
 app.add_middleware(

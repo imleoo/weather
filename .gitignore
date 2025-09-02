@@ -43,3 +43,15 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+/logs/
+/backend/venv/
+/backend/__pycache__/
+/backend/*.pyc
+/backend/*.pyo
+/backend/.vscode/
+/backend/.pytest_cache/
+/backend/.mypy_cache/
+/backend/instance/
+/backend/*.sqlite3
+/backend/*.sqlite
+/backend/routers/__pycache__/

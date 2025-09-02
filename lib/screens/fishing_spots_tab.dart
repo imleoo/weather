@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:latlong2/latlong.dart';
 import '../providers/weather_provider.dart';
 import '../models/fishing_spot_model.dart';
 import '../services/api_service.dart';
+import '../services/social_share_service.dart';
 import '../l10n/app_localizations.dart';
+import '../widgets/fishing_map_widget.dart';
+import '../utils/app_logger.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class FishingSpotsTab extends StatefulWidget {
   const FishingSpotsTab({super.key});
@@ -16,6 +21,7 @@ class _FishingSpotsTabState extends State<FishingSpotsTab> with SingleTickerProv
   late TabController _tabController;
   List<FishingSpot> _nearbySpots = [];
   bool _isLoading = false;
+  bool _showMap = false;
 
   @override
   void initState() {
@@ -80,6 +86,22 @@ class _FishingSpotsTabState extends State<FishingSpotsTab> with SingleTickerProv
           labelColor: Colors.white,
           unselectedLabelColor: Colors.white70,
         ),
+        actions: [
+          // 地图/列表切换按钮
+          IconButton(
+            icon: Icon(_showMap ? Icons.list : Icons.map),
+            onPressed: () {
+              setState(() {
+                _showMap = !_showMap;
+              });
+              AppLogger.info(
+                '切换钓点视图',
+                details: {'view': _showMap ? 'map' : 'list'},
+                tag: 'FISHING_SPOTS',
+              );
+            },
+          ),
+        ],
       ),
       body: TabBarView(
         controller: _tabController,
@@ -117,43 +139,57 @@ class _FishingSpotsTabState extends State<FishingSpotsTab> with SingleTickerProv
       );
     }
 
-    return ListView.builder(
-      itemCount: _nearbySpots.length,
-      itemBuilder: (context, index) {
-        final spot = _nearbySpots[index];
-        return Card(
-          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          child: ListTile(
-            leading: const CircleAvatar(
-              backgroundColor: Colors.green,
-              child: Icon(Icons.place, color: Colors.white),
-            ),
-            title: Text(spot.name),
-            subtitle: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('${AppLocalizations.distance}: ${spot.distance.toStringAsFixed(1)}km'),
-                if (spot.description.isNotEmpty)
-                  Text(spot.description, maxLines: 2, overflow: TextOverflow.ellipsis),
-              ],
-            ),
-            trailing: IconButton(
-              icon: const Icon(Icons.directions),
-              onPressed: () {
-                // TODO: 实现导航功能
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('导航功能待实现')),
-                );
+    if (_showMap) {
+      // 地图视图
+      return FishingMapWidget(
+        fishingSpots: _nearbySpots,
+        onSpotTap: (spot) {
+          _showSpotDetails(spot);
+        },
+        onMapTap: (point) {
+          AppLogger.info(
+            '点击地图',
+            details: {'lat': point.latitude, 'lng': point.longitude},
+            tag: 'FISHING_SPOTS',
+          );
+        },
+      );
+    } else {
+      // 列表视图
+      return ListView.builder(
+        itemCount: _nearbySpots.length,
+        itemBuilder: (context, index) {
+          final spot = _nearbySpots[index];
+          return Card(
+            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: ListTile(
+              leading: const CircleAvatar(
+                backgroundColor: Colors.green,
+                child: Icon(Icons.place, color: Colors.white),
+              ),
+              title: Text(spot.name),
+              subtitle: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('${AppLocalizations.distance}: ${spot.distance.toStringAsFixed(1)}km'),
+                  if (spot.description.isNotEmpty)
+                    Text(spot.description, maxLines: 2, overflow: TextOverflow.ellipsis),
+                ],
+              ),
+              trailing: IconButton(
+                icon: const Icon(Icons.directions),
+                onPressed: () {
+                  _launchMapsNavigation(spot);
+                },
+              ),
+              onTap: () {
+                _showSpotDetails(spot);
               },
             ),
-            onTap: () {
-              // TODO: 显示钓点详情
-              _showSpotDetails(spot);
-            },
-          ),
-        );
-      },
-    );
+          );
+        },
+      );
+    }
   }
 
   Widget _buildShareCurrentSpot() {
@@ -233,50 +269,38 @@ class _FishingSpotsTabState extends State<FishingSpotsTab> with SingleTickerProv
   void _showSpotDetails(FishingSpot spot) {
     showModalBottomSheet(
       context: context,
-      builder: (context) => Container(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              spot.name,
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
-            Text('${AppLocalizations.distance}: ${spot.distance.toStringAsFixed(1)}km'),
-            const SizedBox(height: 8),
-            if (spot.description.isNotEmpty) ...[
-              Text(
-                AppLocalizations.description,
-                style: const TextStyle(fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 4),
-              Text(spot.description),
-              const SizedBox(height: 16),
-            ],
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                ElevatedButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                    // TODO: 实现导航
-                  },
-                  child: Text(AppLocalizations.navigate),
-                ),
-                OutlinedButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                  child: Text(AppLocalizations.close),
-                ),
-              ],
-            ),
-          ],
-        ),
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => FishingSpotDetailSheet(
+        spot: spot,
+        onNavigate: () {
+          Navigator.pop(context);
+          _launchMapsNavigation(spot);
+        },
       ),
     );
+  }
+
+  Future<void> _launchMapsNavigation(FishingSpot spot) async {
+    final url = 'https://www.google.com/maps/dir/?api=1&destination=${spot.latitude},${spot.longitude}';
+    AppLogger.info(
+      '启动导航',
+      details: {
+        'spot': spot.name,
+        'lat': spot.latitude,
+        'lng': spot.longitude,
+        'url': url,
+      },
+      tag: 'FISHING_SPOTS',
+    );
+    
+    if (await canLaunchUrl(Uri.parse(url))) {
+      await launchUrl(Uri.parse(url));
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('无法启动地图应用')),
+      );
+    }
   }
 
   void _shareCurrentSpot() {

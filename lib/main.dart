@@ -7,17 +7,28 @@ import 'providers/settings_provider.dart';
 import 'screens/main_navigation_screen.dart';
 import 'services/widget_service.dart';
 import 'utils/app_lifecycle_manager.dart';
+import 'utils/app_logger.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await AppLocalizations.init();
 
+  // 初始化日志系统
+  await AppLogger.init(
+    enableConsoleLog: true,
+    enableFileLog: true,
+    minLevel: LogLevel.debug,
+  );
+  
+  AppLogger.info('应用启动', tag: 'APP');
+
   // 初始化小部件服务（添加错误处理）
   try {
     await WidgetService.init().timeout(const Duration(seconds: 10));
+    AppLogger.info('小部件服务初始化成功', tag: 'WIDGET');
   } catch (e) {
     // 小部件服务初始化失败不影响应用运行
-    debugPrint('Widget service initialization failed: $e');
+    AppLogger.error('小部件服务初始化失败', error: e, tag: 'WIDGET');
   }
 
   runApp(const MyApp());
