@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import 'l10n/app_localizations.dart';
 import 'providers/weather_provider.dart';
 import 'providers/settings_provider.dart';
-import 'screens/home_screen.dart';
+import 'screens/main_navigation_screen.dart';
 import 'services/widget_service.dart';
 import 'utils/app_lifecycle_manager.dart';
 
@@ -60,7 +60,7 @@ class MyApp extends StatelessWidget {
             locale: Locale(AppLocalizations.currentLanguage, ''),
             debugShowCheckedModeBanner: false,
             home: const AppLifecycleManager(
-              child: HomeScreen(),
+              child: MainNavigationScreen(),
             ),
           );
         },
