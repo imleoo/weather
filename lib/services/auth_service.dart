@@ -26,7 +26,8 @@ class AuthService {
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
-      final token = data['token'] as String;
+      // Handle both login and registration token formats
+      final token = data['access_token'] ?? data['token'] as String;
       final user = User.fromJson(data['user']);
 
       // 保存token和用户信息
@@ -38,7 +39,9 @@ class AuthService {
       return user;
     } else {
       final errorData = jsonDecode(response.body);
-      throw Exception(errorData['message'] ?? '登录失败');
+      // Handle both FastAPI 'detail' and custom 'message' formats
+      final errorMessage = errorData['detail'] ?? errorData['message'] ?? '登录失败';
+      throw Exception(errorMessage);
     }
   }
 
@@ -58,7 +61,8 @@ class AuthService {
 
     if (response.statusCode == 201) {
       final data = jsonDecode(response.body);
-      final token = data['token'] as String;
+      // Handle both login and registration token formats
+      final token = data['access_token'] ?? data['token'] as String;
       final user = User.fromJson(data['user']);
 
       // 保存token和用户信息

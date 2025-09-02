@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:image_picker/image_picker.dart';
 import '../providers/weather_provider.dart';
 import '../models/fish_catch_model.dart';
 import '../services/api_service.dart';
@@ -24,6 +25,7 @@ class _ShareTabState extends State<ShareTab> with SingleTickerProviderStateMixin
   final TextEditingController _weightController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
   File? _selectedImage;
+  final ImagePicker _picker = ImagePicker();
 
   @override
   void initState() {
@@ -408,11 +410,23 @@ class _ShareTabState extends State<ShareTab> with SingleTickerProviderStateMixin
     );
   }
 
-  void _pickImage() {
-    // TODO: 实现图片选择
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('图片选择功能待实现')),
-    );
+  void _pickImage() async {
+    try {
+      final XFile? image = await _picker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 85,
+      );
+      
+      if (image != null) {
+        setState(() {
+          _selectedImage = File(image.path);
+        });
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('选择图片失败: $e')),
+      );
+    }
   }
 
   void _shareFishCatch() async {

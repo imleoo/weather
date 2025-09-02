@@ -8,8 +8,7 @@ import crud
 
 router = APIRouter()
 
-# TODO: 需要从main.py导入get_current_user
-# from main import get_current_user
+from dependencies import get_current_user
 
 @router.get("/", response_model=dict)
 async def get_fish_catches(
@@ -23,12 +22,12 @@ async def get_fish_catches(
         "catches": [catch.__dict__ for catch in catches]
     }
 
-# @router.post("/", response_model=FishCatchResponse)
-# async def create_fish_catch(
-#     fish_catch: FishCatchCreate,
-#     current_user = Depends(get_current_user),
-#     db: Session = Depends(get_db)
-# ):
-#     """创建鱼获分享"""
-#     db_catch = crud.create_fish_catch(db, fish_catch, current_user.id)
-#     return db_catch
+@router.post("/", response_model=FishCatchResponse)
+async def create_fish_catch(
+    fish_catch: FishCatchCreate,
+    current_user = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """创建鱼获分享"""
+    db_catch = crud.create_fish_catch(db, fish_catch, current_user.id)
+    return db_catch

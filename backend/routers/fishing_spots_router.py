@@ -5,21 +5,19 @@ from typing import List, Optional
 from database import get_db
 from schemas import FishingSpotCreate, FishingSpotResponse, SuccessResponse
 import crud
+from dependencies import get_current_user
 
 router = APIRouter()
 
-# TODO: 需要从main.py导入get_current_user
-# from main import get_current_user
-
-# @router.post("/", response_model=FishingSpotResponse)
-# async def create_fishing_spot(
-#     spot: FishingSpotCreate,
-#     current_user = Depends(get_current_user),
-#     db: Session = Depends(get_db)
-# ):
-#     """创建钓点"""
-#     db_spot = crud.create_fishing_spot(db, spot, current_user.id)
-#     return db_spot
+@router.post("/", response_model=FishingSpotResponse)
+async def create_fishing_spot(
+    spot: FishingSpotCreate,
+    current_user = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """创建钓点"""
+    db_spot = crud.create_fishing_spot(db, spot, current_user.id)
+    return db_spot
 
 @router.get("/nearby", response_model=dict)
 async def get_nearby_fishing_spots(

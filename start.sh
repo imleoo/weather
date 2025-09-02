@@ -220,6 +220,45 @@ show_status() {
     print_message $NC "综合日志: $COMBINED_LOG"
 }
 
+# 函数：清空日志
+clear_logs() {
+    local service=$1
+    
+    case $service in
+        "backend")
+            if [ -f "$BACKEND_LOG" ]; then
+                print_message $BLUE "清空后端日志..."
+                > "$BACKEND_LOG"
+                print_message $GREEN "后端日志已清空"
+            fi
+            ;;
+        "frontend")
+            if [ -f "$FRONTEND_LOG" ]; then
+                print_message $BLUE "清空前端日志..."
+                > "$FRONTEND_LOG"
+                print_message $GREEN "前端日志已清空"
+            fi
+            ;;
+        "all")
+            if [ -f "$BACKEND_LOG" ]; then
+                print_message $BLUE "清空后端日志..."
+                > "$BACKEND_LOG"
+                print_message $GREEN "后端日志已清空"
+            fi
+            if [ -f "$FRONTEND_LOG" ]; then
+                print_message $BLUE "清空前端日志..."
+                > "$FRONTEND_LOG"
+                print_message $GREEN "前端日志已清空"
+            fi
+            if [ -f "$COMBINED_LOG" ]; then
+                print_message $BLUE "清空综合日志..."
+                > "$COMBINED_LOG"
+                print_message $GREEN "综合日志已清空"
+            fi
+            ;;
+    esac
+}
+
 # 函数：查看日志
 show_logs() {
     local service=$1
@@ -264,6 +303,7 @@ show_help() {
     echo "  restart [backend|frontend|all] 重启服务"
     echo "  status                         查看服务状态"
     echo "  logs [backend|frontend|combined] 查看日志"
+    echo "  clear [backend|frontend|all]  清空日志"
     echo "  help                           显示帮助信息"
     echo
     echo "示例:"
@@ -315,18 +355,21 @@ main() {
             case "${2:-all}" in
                 "backend")
                     stop_backend
-                    sleep 2
+                    clear_logs "backend"
+                    sleep 1
                     start_backend
                     ;;
                 "frontend")
                     stop_frontend
-                    sleep 2
+                    clear_logs "frontend"
+                    sleep 1
                     start_frontend
                     ;;
                 "all")
                     stop_frontend
                     stop_backend
-                    sleep 2
+                    clear_logs "all"
+                    sleep 1
                     start_backend
                     start_frontend
                     ;;
@@ -341,6 +384,23 @@ main() {
             ;;
         "logs")
             show_logs "$2"
+            ;;
+        "clear")
+            case "${2:-all}" in
+                "backend")
+                    clear_logs "backend"
+                    ;;
+                "frontend")
+                    clear_logs "frontend"
+                    ;;
+                "all")
+                    clear_logs "all"
+                    ;;
+                *)
+                    print_message $RED "用法: $0 clear [backend|frontend|all]"
+                    exit 1
+                    ;;
+            esac
             ;;
         "help"|"-h"|"--help")
             show_help
