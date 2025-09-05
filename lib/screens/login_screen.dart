@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../models/user_model.dart';
 import '../services/auth_service.dart';
 import '../l10n/app_localizations.dart';
 
@@ -10,22 +9,23 @@ class LoginScreen extends StatefulWidget {
   State<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStateMixin {
+class _LoginScreenState extends State<LoginScreen>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  
+
   // 登录表单
   final _loginEmailController = TextEditingController();
   final _loginPasswordController = TextEditingController();
-  
+
   // 注册表单
   final _registerEmailController = TextEditingController();
   final _registerPasswordController = TextEditingController();
   final _registerConfirmPasswordController = TextEditingController();
   final _registerNicknameController = TextEditingController();
-  
+
   final _loginFormKey = GlobalKey<FormState>();
   final _registerFormKey = GlobalKey<FormState>();
-  
+
   bool _isLoading = false;
   bool _showLoginPassword = false;
   bool _showRegisterPassword = false;
@@ -41,9 +41,10 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    
+
     // 获取传递的参数
-    final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+    final args =
+        ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
     if (args != null) {
       _onSuccess = args['onSuccess'] as VoidCallback?;
     }
@@ -101,7 +102,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 32),
-            
+
             // 标题
             Text(
               AppLocalizations.welcomeBack,
@@ -118,9 +119,9 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                 color: Colors.grey,
               ),
             ),
-            
+
             const SizedBox(height: 40),
-            
+
             // 邮箱输入
             TextFormField(
               controller: _loginEmailController,
@@ -141,9 +142,9 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                 return null;
               },
             ),
-            
+
             const SizedBox(height: 20),
-            
+
             // 密码输入
             TextFormField(
               controller: _loginPasswordController,
@@ -153,7 +154,9 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                 prefixIcon: const Icon(Icons.lock),
                 suffixIcon: IconButton(
                   icon: Icon(
-                    _showLoginPassword ? Icons.visibility : Icons.visibility_off,
+                    _showLoginPassword
+                        ? Icons.visibility
+                        : Icons.visibility_off,
                   ),
                   onPressed: () {
                     setState(() {
@@ -174,9 +177,9 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                 return null;
               },
             ),
-            
+
             const SizedBox(height: 32),
-            
+
             // 登录按钮
             SizedBox(
               width: double.infinity,
@@ -196,7 +199,8 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                         height: 20,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                          valueColor:
+                              AlwaysStoppedAnimation<Color>(Colors.white),
                         ),
                       )
                     : Text(
@@ -205,9 +209,9 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                       ),
               ),
             ),
-            
+
             const SizedBox(height: 24),
-            
+
             // 忘记密码链接
             Center(
               child: TextButton(
@@ -235,7 +239,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 32),
-            
+
             // 标题
             Text(
               AppLocalizations.createAccount,
@@ -252,9 +256,9 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                 color: Colors.grey,
               ),
             ),
-            
+
             const SizedBox(height: 40),
-            
+
             // 昵称输入
             TextFormField(
               controller: _registerNicknameController,
@@ -274,9 +278,9 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                 return null;
               },
             ),
-            
+
             const SizedBox(height: 20),
-            
+
             // 邮箱输入
             TextFormField(
               controller: _registerEmailController,
@@ -297,9 +301,9 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                 return null;
               },
             ),
-            
+
             const SizedBox(height: 20),
-            
+
             // 密码输入
             TextFormField(
               controller: _registerPasswordController,
@@ -309,7 +313,9 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                 prefixIcon: const Icon(Icons.lock),
                 suffixIcon: IconButton(
                   icon: Icon(
-                    _showRegisterPassword ? Icons.visibility : Icons.visibility_off,
+                    _showRegisterPassword
+                        ? Icons.visibility
+                        : Icons.visibility_off,
                   ),
                   onPressed: () {
                     setState(() {
@@ -330,9 +336,9 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                 return null;
               },
             ),
-            
+
             const SizedBox(height: 20),
-            
+
             // 确认密码输入
             TextFormField(
               controller: _registerConfirmPasswordController,
@@ -342,7 +348,9 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                 prefixIcon: const Icon(Icons.lock_outline),
                 suffixIcon: IconButton(
                   icon: Icon(
-                    _showConfirmPassword ? Icons.visibility : Icons.visibility_off,
+                    _showConfirmPassword
+                        ? Icons.visibility
+                        : Icons.visibility_off,
                   ),
                   onPressed: () {
                     setState(() {
@@ -363,9 +371,9 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                 return null;
               },
             ),
-            
+
             const SizedBox(height: 32),
-            
+
             // 注册按钮
             SizedBox(
               width: double.infinity,
@@ -385,7 +393,8 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                         height: 20,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                          valueColor:
+                              AlwaysStoppedAnimation<Color>(Colors.white),
                         ),
                       )
                     : Text(
@@ -394,9 +403,9 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                       ),
               ),
             ),
-            
+
             const SizedBox(height: 24),
-            
+
             // 服务条款提示
             Text(
               AppLocalizations.termsAgreement,
@@ -430,9 +439,11 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
       if (mounted) {
         Navigator.pop(context, user);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('${AppLocalizations.loginSuccess}, ${user.nickname}!')),
+          SnackBar(
+              content:
+                  Text('${AppLocalizations.loginSuccess}, ${user.nickname}!')),
         );
-        
+
         // 执行成功回调
         _onSuccess?.call();
       }
@@ -473,14 +484,17 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
       if (mounted) {
         Navigator.pop(context, user);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('${AppLocalizations.registerSuccess}, ${user.nickname}!')),
+          SnackBar(
+              content: Text(
+                  '${AppLocalizations.registerSuccess}, ${user.nickname}!')),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('${AppLocalizations.registerFailed}: ${e.toString()}'),
+            content:
+                Text('${AppLocalizations.registerFailed}: ${e.toString()}'),
             backgroundColor: Colors.red,
           ),
         );

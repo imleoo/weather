@@ -45,13 +45,15 @@ class AuthService {
     } else {
       final errorData = jsonDecode(response.body);
       // Handle both FastAPI 'detail' and custom 'message' formats
-      final errorMessage = errorData['detail'] ?? errorData['message'] ?? '登录失败';
+      final errorMessage =
+          errorData['detail'] ?? errorData['message'] ?? '登录失败';
       throw Exception(errorMessage);
     }
   }
 
   // 注册
-  static Future<User> register(String email, String password, String nickname) async {
+  static Future<User> register(
+      String email, String password, String nickname) async {
     final response = await http.post(
       Uri.parse('$_baseUrl/auth/register'),
       headers: {
@@ -147,7 +149,8 @@ class AuthService {
   }
 
   // 修改密码
-  static Future<void> changePassword(String oldPassword, String newPassword) async {
+  static Future<void> changePassword(
+      String oldPassword, String newPassword) async {
     final token = await _getAuthToken();
     if (token == null) {
       throw Exception('未登录');
@@ -215,7 +218,8 @@ class AuthService {
     print('=== 获取认证头部 ===');
     print('Token exists: ${token != null}');
     print('Token length: ${token?.length}');
-    print('Token prefix: ${token?.substring(0, Math.min(10, token?.length ?? 0))}');
+    print(
+        'Token prefix: ${token?.substring(0, Math.min(10, token.length ?? 0))}');
     return {
       'Content-Type': 'application/json',
       if (token != null) 'Authorization': 'Bearer $token',
@@ -230,15 +234,16 @@ class AuthService {
   }
 
   // 检查登录状态并处理登录跳转
-  static Future<bool> ensureLoggedIn(BuildContext context, {VoidCallback? onSuccess}) async {
+  static Future<bool> ensureLoggedIn(BuildContext context,
+      {VoidCallback? onSuccess}) async {
     final isLoggedIn = await AuthService.isLoggedIn();
     print('=== 检查登录状态: $isLoggedIn ===');
-    
+
     if (!isLoggedIn) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('请先登录')),
       );
-      
+
       // 延迟跳转，让用户看到提示
       Future.delayed(const Duration(milliseconds: 500), () {
         if (context.mounted) {
@@ -256,10 +261,10 @@ class AuthService {
           });
         }
       });
-      
+
       return false;
     }
-    
+
     return true;
   }
 }

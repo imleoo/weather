@@ -1,14 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
-import 'dart:io' show Platform;
 import '../providers/weather_provider.dart';
 import '../models/fish_catch_model.dart';
 import '../services/api_service.dart';
 import '../services/auth_service.dart';
 import '../services/social_share_service.dart';
 import '../l10n/app_localizations.dart';
-import '../utils/app_logger.dart';
 import 'dart:io';
 
 class ShareTab extends StatefulWidget {
@@ -18,11 +16,12 @@ class ShareTab extends StatefulWidget {
   State<ShareTab> createState() => _ShareTabState();
 }
 
-class _ShareTabState extends State<ShareTab> with SingleTickerProviderStateMixin {
+class _ShareTabState extends State<ShareTab>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
   List<FishCatch> _fishCatches = [];
   bool _isLoading = false;
-  
+
   final TextEditingController _fishTypeController = TextEditingController();
   final TextEditingController _weightController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
@@ -112,10 +111,11 @@ class _ShareTabState extends State<ShareTab> with SingleTickerProviderStateMixin
                 children: [
                   Text(
                     AppLocalizations.shareFishCatch,
-                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                        fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 16),
-                  
+
                   // 鱼类型输入
                   TextField(
                     controller: _fishTypeController,
@@ -127,7 +127,7 @@ class _ShareTabState extends State<ShareTab> with SingleTickerProviderStateMixin
                     ),
                   ),
                   const SizedBox(height: 16),
-                  
+
                   // 重量输入
                   TextField(
                     controller: _weightController,
@@ -141,7 +141,7 @@ class _ShareTabState extends State<ShareTab> with SingleTickerProviderStateMixin
                     keyboardType: TextInputType.number,
                   ),
                   const SizedBox(height: 16),
-                  
+
                   // 描述输入
                   TextField(
                     controller: _descriptionController,
@@ -154,7 +154,7 @@ class _ShareTabState extends State<ShareTab> with SingleTickerProviderStateMixin
                     maxLines: 3,
                   ),
                   const SizedBox(height: 16),
-                  
+
                   // 图片选择
                   Container(
                     width: double.infinity,
@@ -176,11 +176,15 @@ class _ShareTabState extends State<ShareTab> with SingleTickerProviderStateMixin
                                     fit: BoxFit.cover,
                                     errorBuilder: (context, error, stackTrace) {
                                       return const Column(
-                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
                                         children: [
-                                          Icon(Icons.broken_image, size: 48, color: Colors.grey),
+                                          Icon(Icons.broken_image,
+                                              size: 48, color: Colors.grey),
                                           SizedBox(height: 8),
-                                          Text('图片预览不可用', style: TextStyle(color: Colors.grey)),
+                                          Text('图片预览不可用',
+                                              style: TextStyle(
+                                                  color: Colors.grey)),
                                         ],
                                       );
                                     },
@@ -191,7 +195,8 @@ class _ShareTabState extends State<ShareTab> with SingleTickerProviderStateMixin
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                const Icon(Icons.add_a_photo, size: 48, color: Colors.grey),
+                                const Icon(Icons.add_a_photo,
+                                    size: 48, color: Colors.grey),
                                 const SizedBox(height: 8),
                                 Text(
                                   AppLocalizations.addPhoto,
@@ -202,7 +207,7 @@ class _ShareTabState extends State<ShareTab> with SingleTickerProviderStateMixin
                           ),
                   ),
                   const SizedBox(height: 16),
-                  
+
                   // 位置信息显示
                   Container(
                     padding: const EdgeInsets.all(12),
@@ -213,24 +218,29 @@ class _ShareTabState extends State<ShareTab> with SingleTickerProviderStateMixin
                     ),
                     child: Consumer<WeatherProvider>(
                       builder: (context, weatherProvider, child) {
-                        final location = weatherProvider.weatherData?.nearestArea;
+                        final location =
+                            weatherProvider.weatherData?.nearestArea;
                         return Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Row(
                               children: [
-                                const Icon(Icons.location_on, color: Colors.blue),
+                                const Icon(Icons.location_on,
+                                    color: Colors.blue),
                                 const SizedBox(width: 8),
                                 Text(
                                   AppLocalizations.currentLocation,
-                                  style: const TextStyle(fontWeight: FontWeight.bold),
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.bold),
                                 ),
                               ],
                             ),
                             const SizedBox(height: 8),
                             if (location != null) ...[
-                              Text('${AppLocalizations.location}: ${location.areaName}'),
-                              Text('${AppLocalizations.coordinates}: ${location.latitude}, ${location.longitude}'),
+                              Text(
+                                  '${AppLocalizations.location}: ${location.areaName}'),
+                              Text(
+                                  '${AppLocalizations.coordinates}: ${location.latitude}, ${location.longitude}'),
                             ] else ...[
                               Text(AppLocalizations.locationNotAvailable),
                             ],
@@ -240,7 +250,7 @@ class _ShareTabState extends State<ShareTab> with SingleTickerProviderStateMixin
                     ),
                   ),
                   const SizedBox(height: 24),
-                  
+
                   // 分享按钮
                   SizedBox(
                     width: double.infinity,
@@ -323,7 +333,8 @@ class _ShareTabState extends State<ShareTab> with SingleTickerProviderStateMixin
                           ),
                           Text(
                             fishCatch.timeAgo,
-                            style: const TextStyle(color: Colors.grey, fontSize: 12),
+                            style: const TextStyle(
+                                color: Colors.grey, fontSize: 12),
                           ),
                         ],
                       ),
@@ -331,7 +342,6 @@ class _ShareTabState extends State<ShareTab> with SingleTickerProviderStateMixin
                   ],
                 ),
                 const SizedBox(height: 12),
-                
                 if (fishCatch.imageUrl != null) ...[
                   ClipRRect(
                     borderRadius: BorderRadius.circular(8),
@@ -352,7 +362,6 @@ class _ShareTabState extends State<ShareTab> with SingleTickerProviderStateMixin
                   ),
                   const SizedBox(height: 12),
                 ],
-                
                 Row(
                   children: [
                     const Icon(Icons.water, size: 16, color: Colors.blue),
@@ -364,12 +373,10 @@ class _ShareTabState extends State<ShareTab> with SingleTickerProviderStateMixin
                   ],
                 ),
                 const SizedBox(height: 8),
-                
                 if (fishCatch.description.isNotEmpty) ...[
                   Text(fishCatch.description),
                   const SizedBox(height: 8),
                 ],
-                
                 Row(
                   children: [
                     const Icon(Icons.location_on, size: 16, color: Colors.red),
@@ -383,21 +390,23 @@ class _ShareTabState extends State<ShareTab> with SingleTickerProviderStateMixin
                   ],
                 ),
                 const SizedBox(height: 12),
-                
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
                     TextButton.icon(
                       onPressed: () => _likeFishCatch(fishCatch.id),
                       icon: Icon(
-                        fishCatch.isLiked ? Icons.favorite : Icons.favorite_border,
+                        fishCatch.isLiked
+                            ? Icons.favorite
+                            : Icons.favorite_border,
                         color: fishCatch.isLiked ? Colors.red : Colors.grey,
                       ),
                       label: Text('${fishCatch.likes}'),
                     ),
                     TextButton.icon(
                       onPressed: () => _commentOnFishCatch(fishCatch),
-                      icon: const Icon(Icons.comment_outlined, color: Colors.grey),
+                      icon: const Icon(Icons.comment_outlined,
+                          color: Colors.grey),
                       label: Text('${fishCatch.comments}'),
                     ),
                     TextButton.icon(
@@ -433,7 +442,7 @@ class _ShareTabState extends State<ShareTab> with SingleTickerProviderStateMixin
         source: ImageSource.gallery,
         imageQuality: 85,
       );
-      
+
       if (image != null) {
         setState(() {
           // 在Web平台上直接使用XFile，在移动端创建File对象
@@ -459,7 +468,7 @@ class _ShareTabState extends State<ShareTab> with SingleTickerProviderStateMixin
     })) {
       return;
     }
-    
+
     _shareFishCatchInternal();
   }
 
@@ -472,9 +481,10 @@ class _ShareTabState extends State<ShareTab> with SingleTickerProviderStateMixin
     }
 
     try {
-      final weatherProvider = Provider.of<WeatherProvider>(context, listen: false);
+      final weatherProvider =
+          Provider.of<WeatherProvider>(context, listen: false);
       final location = weatherProvider.weatherData?.nearestArea;
-      
+
       await ApiService.shareFishCatch(
         fishType: _fishTypeController.text,
         weight: double.tryParse(_weightController.text) ?? 0,
@@ -499,10 +509,10 @@ class _ShareTabState extends State<ShareTab> with SingleTickerProviderStateMixin
 
       // 刷新社区分享列表
       _loadFishCatches();
-      
+
       // 切换到社区分享标签页
       _tabController.animateTo(1);
-      
+
       // 显示分享选项
       WidgetsBinding.instance.addPostFrameCallback((_) {
         SocialShareService.showShareOptions(
@@ -528,7 +538,7 @@ class _ShareTabState extends State<ShareTab> with SingleTickerProviderStateMixin
     if (!await AuthService.ensureLoggedIn(context)) {
       return;
     }
-    
+
     // TODO: 实现点赞功能
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('点赞功能待实现')),
@@ -540,7 +550,7 @@ class _ShareTabState extends State<ShareTab> with SingleTickerProviderStateMixin
     if (!await AuthService.ensureLoggedIn(context)) {
       return;
     }
-    
+
     // TODO: 实现评论功能
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('评论功能待实现')),

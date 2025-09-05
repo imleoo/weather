@@ -1,13 +1,50 @@
 import 'dart:convert';
-import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
+import 'package:meta/meta.dart'; // 添加meta包导入
 import '../models/fishing_spot_model.dart';
 import '../models/fish_catch_model.dart';
 import 'auth_service.dart';
 
 class ApiService {
-  static const String _baseUrl = 'http://192.168.28.126:8000/api'; // 后端API地址
+  // 使用相对路径，避免CORS问题
+  static const String _baseUrl = '/api'; // 相对路径，避免CORS问题
+
+  // 用于测试的HTTP客户端
+  static http.Client _httpClient = http.Client();
+
+  // 注入HTTP客户端（用于测试）
+  @visibleForTesting
+  static void injectHttpClient(http.Client client) {
+    _httpClient = client;
+  }
+
+  // 调试信息
+  static void _logApiCall(String method, String endpoint,
+      {dynamic body, dynamic response, dynamic error}) {
+    print('=== API调用 ===');
+    print('方法: $method');
+    print('端点: $endpoint');
+    if (body != null) print('请求体: $body');
+    if (response != null) print('响应: $response');
+    if (error != null) print('错误: $error');
+    print('=============');
+  }
+
+  /// 检查API地址是否可访问
+  static Future<bool> checkApiConnection() async {
+    try {
+      print('=== 检查API连接 ===');
+      print('API地址: $_baseUrl/health');
+      final response = await _httpClient.get(Uri.parse('$_baseUrl/health'));
+      print('响应状态码: ${response.statusCode}');
+      print('响应内容: ${response.body}');
+      return response.statusCode == 200;
+    } catch (e) {
+      print('API连接检查失败: $e');
+      return false;
+    }
+  }
 
   // 处理HTTP响应，包括401错误
   static dynamic _handleResponse(http.Response response) {
@@ -16,7 +53,7 @@ class ApiService {
       AuthService.logout();
       throw Exception('登录已过期，请重新登录');
     }
-    
+
     final data = jsonDecode(response.body);
     if (response.statusCode >= 200 && response.statusCode < 300) {
       return data;
@@ -32,9 +69,10 @@ class ApiService {
     double radius = 10.0, // 默认搜索半径10公里
   }) async {
     final headers = await AuthService.getAuthHeaders();
-    
-    final response = await http.get(
-      Uri.parse('$_baseUrl/fishing-spots/nearby?lat=$latitude&lng=$longitude&radius=$radius'),
+
+    final response = await _httpClient.get(
+      Uri.parse(
+          '$_baseUrl/fishing-spots/nearby?lat=$latitude&lng=$longitude&radius=$radius'),
       headers: headers,
     );
 
@@ -52,25 +90,56 @@ class ApiService {
     required double latitude,
     required double longitude,
   }) async {
-    final headers = await AuthService.getAuthHeaders();
-    print('=== 分享钓点请求 ===');
-    print('URL: $_baseUrl/fishing-spots/');
-    print('Headers: $headers');
-    print('Has Authorization: ${headers.containsKey('Authorization')}');
-    
-    final response = await http.post(
-      Uri.parse('$_baseUrl/fishing-spots/'),
-      headers: headers,
-      body: jsonEncode({
+    try {
+      // 先检查API连接
+      print('=== 开始分享钓点 ===');
+      print('检查API连接...');
+      final isConnected = await checkApiConnection();
+      if (!isConnected) {
+        print('API连接失败，无法分享钓点');
+        throw Exception('无法连接到服务器，请检查网络连接');
+      }
+      print('API连接正常');
+
+      // 获取认证头部
+      print('获取认证头部...');
+      final headers = await AuthService.getAuthHeaders();
+      print('认证头部获取成功');
+
+      // 准备请求数据
+      final requestBody = {
         'name': name,
         'description': description,
         'latitude': latitude,
         'longitude': longitude,
-      }),
-    );
+      };
+      final encodedBody = jsonEncode(requestBody);
 
-    final data = _handleResponse(response);
-    return FishingSpot.fromJson(data['fishing_spot']);
+      print('=== 分享钓点请求 ===');
+      print('URL: $_baseUrl/fishing-spots/');
+      print('Headers: $headers');
+      print('Has Authorization: ${headers.containsKey('Authorization')}');
+      print('请求体: $encodedBody');
+
+      // 发送请求
+      print('发送POST请求...');
+      final response = await _httpClient.post(
+        Uri.parse('$_baseUrl/fishing-spots/'),
+        headers: headers,
+        body: encodedBody,
+      );
+
+      // 处理响应
+      print('收到响应，状态码: ${response.statusCode}');
+      print('响应内容: ${response.body}');
+
+      final data = _handleResponse(response);
+      print('响应处理成功，返回钓点数据');
+      return FishingSpot.fromJson(data['fishing_spot']);
+    } catch (e) {
+      print('分享钓点失败: $e');
+      rethrow;
+    }
   }
 
   // 获取鱼获分享列表
@@ -79,7 +148,7 @@ class ApiService {
     int limit = 20,
   }) async {
     final headers = await AuthService.getAuthHeaders();
-    
+
     final response = await http.get(
       Uri.parse('$_baseUrl/fish-catches?page=$page&limit=$limit'),
       headers: headers,
@@ -108,14 +177,14 @@ class ApiService {
     dynamic imageFile,
   }) async {
     final headers = await AuthService.getAuthHeaders();
-    
+
     // 如果有图片，先上传图片
     String? imageUrl;
     if (imageFile != null) {
       imageUrl = await _uploadImage(imageFile);
     }
 
-    final response = await http.post(
+    final response = await _httpClient.post(
       Uri.parse('$_baseUrl/fish-catches'),
       headers: headers,
       body: jsonEncode({
@@ -141,7 +210,7 @@ class ApiService {
   // 点赞鱼获
   static Future<void> likeFishCatch(int fishCatchId) async {
     final headers = await AuthService.getAuthHeaders();
-    
+
     final response = await http.post(
       Uri.parse('$_baseUrl/fish-catches/$fishCatchId/like'),
       headers: headers,
@@ -156,7 +225,7 @@ class ApiService {
   // 取消点赞
   static Future<void> unlikeFishCatch(int fishCatchId) async {
     final headers = await AuthService.getAuthHeaders();
-    
+
     final response = await http.delete(
       Uri.parse('$_baseUrl/fish-catches/$fishCatchId/like'),
       headers: headers,
@@ -169,9 +238,10 @@ class ApiService {
   }
 
   // 评论鱼获
-  static Future<void> commentOnFishCatch(int fishCatchId, String content) async {
+  static Future<void> commentOnFishCatch(
+      int fishCatchId, String content) async {
     final headers = await AuthService.getAuthHeaders();
-    
+
     final response = await http.post(
       Uri.parse('$_baseUrl/fish-catches/$fishCatchId/comments'),
       headers: headers,
@@ -194,9 +264,10 @@ class ApiService {
   }) async {
     final headers = await AuthService.getAuthHeaders();
     final userIdParam = userId != null ? '/$userId' : '/me';
-    
+
     final response = await http.get(
-      Uri.parse('$_baseUrl/users$userIdParam/fish-catches?page=$page&limit=$limit'),
+      Uri.parse(
+          '$_baseUrl/users$userIdParam/fish-catches?page=$page&limit=$limit'),
       headers: headers,
     );
 
@@ -220,9 +291,10 @@ class ApiService {
   }) async {
     final headers = await AuthService.getAuthHeaders();
     final userIdParam = userId != null ? '/$userId' : '/me';
-    
+
     final response = await http.get(
-      Uri.parse('$_baseUrl/users$userIdParam/fishing-spots?page=$page&limit=$limit'),
+      Uri.parse(
+          '$_baseUrl/users$userIdParam/fishing-spots?page=$page&limit=$limit'),
       headers: headers,
     );
 
@@ -244,7 +316,7 @@ class ApiService {
     int limit = 20,
   }) async {
     final headers = await AuthService.getAuthHeaders();
-    
+
     final response = await http.get(
       Uri.parse('$_baseUrl/users/me/liked-catches?page=$page&limit=$limit'),
       headers: headers,
@@ -265,14 +337,14 @@ class ApiService {
   // 上传图片（私有方法）
   static Future<String> _uploadImage(dynamic imageFile) async {
     final headers = await AuthService.getAuthHeaders();
-    
+
     final request = http.MultipartRequest(
       'POST',
       Uri.parse('$_baseUrl/upload/image'),
     );
-    
+
     request.headers.addAll(headers);
-    
+
     // 根据平台处理图片文件
     if (imageFile is XFile) {
       // Web平台 - XFile
@@ -309,7 +381,7 @@ class ApiService {
   // 删除鱼获
   static Future<void> deleteFishCatch(int fishCatchId) async {
     final headers = await AuthService.getAuthHeaders();
-    
+
     final response = await http.delete(
       Uri.parse('$_baseUrl/fish-catches/$fishCatchId'),
       headers: headers,
@@ -324,7 +396,7 @@ class ApiService {
   // 删除钓点
   static Future<void> deleteFishingSpot(int fishingSpotId) async {
     final headers = await AuthService.getAuthHeaders();
-    
+
     final response = await http.delete(
       Uri.parse('$_baseUrl/fishing-spots/$fishingSpotId'),
       headers: headers,

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/weather_provider.dart';
-import '../services/widget_service.dart';
 import '../utils/weather_icons.dart';
 import '../widgets/current_weather.dart';
 import '../widgets/fishing_daily_forecast.dart';
@@ -144,7 +143,8 @@ class _WeatherTabState extends State<WeatherTab> {
 
                   return WeatherCodeSelector(
                     builder: (weatherCode) {
-                      final backgroundColor = WeatherIcons.getWeatherColor(weatherCode ?? '113');
+                      final backgroundColor =
+                          WeatherIcons.getWeatherColor(weatherCode ?? '113');
 
                       return Container(
                         decoration: BoxDecoration(
@@ -160,11 +160,15 @@ class _WeatherTabState extends State<WeatherTab> {
                         ),
                         child: RefreshIndicator(
                           onRefresh: () async {
-                            final weatherProvider = Provider.of<WeatherProvider>(
+                            final weatherProvider =
+                                Provider.of<WeatherProvider>(
                               context,
                               listen: false,
                             );
-                            if (weatherProvider.city != null && weatherProvider.city != weatherProvider.weatherData?.nearestArea.areaName) {
+                            if (weatherProvider.city != null &&
+                                weatherProvider.city !=
+                                    weatherProvider
+                                        .weatherData?.nearestArea.areaName) {
                               // 如果是手动选择的城市，刷新城市天气
                               await weatherProvider.fetchWeatherByCity(
                                 weatherProvider.city!,
@@ -188,7 +192,8 @@ class _WeatherTabState extends State<WeatherTab> {
                               // 使用新的钓鱼天气预报组件
                               ForecastSelector(
                                 builder: (forecast) {
-                                  return FishingDailyForecast(forecast: forecast);
+                                  return FishingDailyForecast(
+                                      forecast: forecast);
                                 },
                               ),
                             ],

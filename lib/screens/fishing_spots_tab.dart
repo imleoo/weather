@@ -6,7 +6,7 @@ import '../models/fishing_spot_model.dart';
 import '../services/api_service.dart';
 import '../services/auth_service.dart';
 import '../services/location_service.dart';
-import '../services/social_share_service.dart';
+import '../services/social_share_service_new.dart';
 import '../l10n/app_localizations.dart';
 import '../widgets/fishing_map_widget.dart';
 import '../utils/app_logger.dart';
@@ -20,7 +20,8 @@ class FishingSpotsTab extends StatefulWidget {
   State<FishingSpotsTab> createState() => _FishingSpotsTabState();
 }
 
-class _FishingSpotsTabState extends State<FishingSpotsTab> with SingleTickerProviderStateMixin {
+class _FishingSpotsTabState extends State<FishingSpotsTab>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
   List<FishingSpot> _nearbySpots = [];
   bool _isLoading = false;
@@ -56,7 +57,7 @@ class _FishingSpotsTabState extends State<FishingSpotsTab> with SingleTickerProv
       print('获取位置失败: $e');
     }
   }
-  
+
   Future<void> _loadNearbySpots() async {
     setState(() {
       _isLoading = true;
@@ -64,21 +65,22 @@ class _FishingSpotsTabState extends State<FishingSpotsTab> with SingleTickerProv
 
     try {
       double? lat, lng;
-      
+
       // 首先尝试从当前位置获取
       if (_currentLocation != null) {
         lat = _currentLocation!.latitude;
         lng = _currentLocation!.longitude;
       } else {
         // 否则从天气数据获取
-        final weatherProvider = Provider.of<WeatherProvider>(context, listen: false);
+        final weatherProvider =
+            Provider.of<WeatherProvider>(context, listen: false);
         final location = weatherProvider.weatherData?.nearestArea;
         if (location != null) {
           lat = double.parse(location.latitude);
           lng = double.parse(location.longitude);
         }
       }
-      
+
       if (lat != null && lng != null) {
         final spots = await ApiService.getNearbyFishingSpots(
           latitude: lat,
@@ -232,9 +234,11 @@ class _FishingSpotsTabState extends State<FishingSpotsTab> with SingleTickerProv
               subtitle: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('${AppLocalizations.distance}: ${spot.distance.toStringAsFixed(1)}km'),
+                  Text(
+                      '${AppLocalizations.distance}: ${spot.distance.toStringAsFixed(1)}km'),
                   if (spot.description.isNotEmpty)
-                    Text(spot.description, maxLines: 2, overflow: TextOverflow.ellipsis),
+                    Text(spot.description,
+                        maxLines: 2, overflow: TextOverflow.ellipsis),
                 ],
               ),
               trailing: IconButton(
@@ -271,7 +275,8 @@ class _FishingSpotsTabState extends State<FishingSpotsTab> with SingleTickerProv
                       const SizedBox(width: 8),
                       Text(
                         AppLocalizations.currentLocation,
-                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        style: const TextStyle(
+                            fontSize: 18, fontWeight: FontWeight.bold),
                       ),
                     ],
                   ),
@@ -283,8 +288,10 @@ class _FishingSpotsTabState extends State<FishingSpotsTab> with SingleTickerProv
                         return Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text('${AppLocalizations.location}: ${location.areaName}'),
-                            Text('${AppLocalizations.coordinates}: ${location.latitude}, ${location.longitude}'),
+                            Text(
+                                '${AppLocalizations.location}: ${location.areaName}'),
+                            Text(
+                                '${AppLocalizations.coordinates}: ${location.latitude}, ${location.longitude}'),
                             const SizedBox(height: 16),
                             TextField(
                               decoration: InputDecoration(
@@ -345,7 +352,8 @@ class _FishingSpotsTabState extends State<FishingSpotsTab> with SingleTickerProv
   }
 
   Future<void> _launchMapsNavigation(FishingSpot spot) async {
-    final url = 'https://www.google.com/maps/dir/?api=1&destination=${spot.latitude},${spot.longitude}';
+    final url =
+        'https://www.google.com/maps/dir/?api=1&destination=${spot.latitude},${spot.longitude}';
     AppLogger.info(
       '启动导航',
       details: {
@@ -356,7 +364,7 @@ class _FishingSpotsTabState extends State<FishingSpotsTab> with SingleTickerProv
       },
       tag: 'FISHING_SPOTS',
     );
-    
+
     if (await canLaunchUrl(Uri.parse(url))) {
       await launchUrl(Uri.parse(url));
     } else {
@@ -380,7 +388,7 @@ class _FishingSpotsTabState extends State<FishingSpotsTab> with SingleTickerProv
     print('=== 开始分享钓点 ===');
     print('当前位置: $_currentLocation');
     print('钓点描述: "${_spotDescription.trim()}"');
-    
+
     if (_currentLocation == null) {
       print('错误: 当前位置为空');
       ScaffoldMessenger.of(context).showSnackBar(
@@ -388,35 +396,59 @@ class _FishingSpotsTabState extends State<FishingSpotsTab> with SingleTickerProv
       );
       return;
     }
-    
+
     if (_spotDescription.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('请输入钓点描述')),
       );
       return;
     }
-    
+
     try {
       setState(() {
         _isLoading = true;
       });
-      
+
       await ApiService.shareCurrentSpot(
         name: '我的钓点',
         latitude: _currentLocation!.latitude,
         longitude: _currentLocation!.longitude,
         description: _spotDescription,
       );
-      
+
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('钓点分享成功！')),
       );
-      
+
+      // 保存描述，因为后面会清空
+      final String savedDescription = _spotDescription;
+
       // 清空描述并刷新列表
       setState(() {
         _spotDescription = '';
       });
       _loadNearbySpots();
+
+      // 显示社交分享选项
+      print('=== 准备显示社交分享选项 ===');
+      try {
+        SocialShareService.showShareOptions(
+          context: context,
+          shareType: 'fishing_spot',
+          shareData: {
+            'spotName': '我的钓点',
+            'description': savedDescription,
+            'latitude': _currentLocation!.latitude,
+            'longitude': _currentLocation!.longitude,
+          },
+        );
+        print('=== 社交分享选项显示成功 ===');
+      } catch (e) {
+        print('=== 显示社交分享选项失败: $e ===');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('显示分享选项失败: ${e.toString()}')),
+        );
+      }
     } catch (e) {
       print('分享钓点失败: $e');
       // 检查是否是认证错误

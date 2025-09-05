@@ -291,13 +291,125 @@ class SocialShareService {
       details: {
         'shareType': shareType,
         'shareData': shareData.toString(),
-        'platform': 'Android',
       },
       tag: 'SOCIAL_SHARE',
     );
 
-    // 直接使用系统分享，这是最简单可靠的方式
+    // 显示社交媒体选择对话框
+    showModalBottomSheet(
+      context: context,
+      builder: (BuildContext context) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                title: const Text('选择分享平台',
+                    style: TextStyle(fontWeight: FontWeight.bold)),
+                trailing: IconButton(
+                  icon: const Icon(Icons.close),
+                  onPressed: () => Navigator.pop(context),
+                ),
+              ),
+              const Divider(),
+              Expanded(
+                child: SingleChildScrollView(
+                  child: Column(
+                    children: [
+                      // 系统分享选项
+                      ListTile(
+                        leading: const CircleAvatar(
+                          backgroundColor: Colors.blue,
+                          child: Icon(Icons.share, color: Colors.white),
+                        ),
+                        title: const Text('系统分享'),
+                        subtitle: const Text('使用系统默认分享'),
+                        onTap: () {
+                          Navigator.pop(context);
+                          _shareWithSystem(context, shareType, shareData);
+                        },
+                      ),
+                      const Divider(),
+                      // 社交媒体平台
+                      Wrap(
+                        spacing: 16,
+                        runSpacing: 16,
+                        alignment: WrapAlignment.center,
+                        children: [
+                          _buildSocialPlatformButton(
+                              context, 'twitter', shareType, shareData),
+                          _buildSocialPlatformButton(
+                              context, 'facebook', shareType, shareData),
+                          _buildSocialPlatformButton(
+                              context, 'linkedin', shareType, shareData),
+                          _buildSocialPlatformButton(
+                              context, 'weibo', shareType, shareData),
+                          _buildSocialPlatformButton(
+                              context, 'wechat', shareType, shareData),
+                          _buildSocialPlatformButton(
+                              context, 'qq', shareType, shareData),
+                          _buildSocialPlatformButton(
+                              context, 'zhihu', shareType, shareData),
+                          _buildSocialPlatformButton(
+                              context, 'xiaohongshu', shareType, shareData),
+                        ],
+                      ),
+                      const SizedBox(height: 20),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  /// 构建社交平台按钮
+  static Widget _buildSocialPlatformButton(
+    BuildContext context,
+    String platform,
+    String shareType,
+    Map<String, dynamic> shareData,
+  ) {
+    final platformInfo = socialPlatforms[platform];
+    if (platformInfo == null) return const SizedBox.shrink();
+
+    return InkWell(
+      onTap: () {
+        Navigator.pop(context);
+        _handleShare(
+          context: context,
+          shareType: shareType,
+          shareData: shareData,
+          platform: platform,
+        );
+      },
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          CircleAvatar(
+            backgroundColor: _getPlatformColor(platform),
+            radius: 25,
+            child: Icon(_getPlatformIcon(platform), color: Colors.white),
+          ),
+          const SizedBox(height: 4),
+          Text(platformInfo['name']!, style: const TextStyle(fontSize: 12)),
+        ],
+      ),
+    );
+  }
+
+  /// 使用系统分享
+  static Future<void> _shareWithSystem(
+    BuildContext context,
+    String shareType,
+    Map<String, dynamic> shareData,
+  ) async {
     try {
+      print('使用系统分享: $shareType');
+
       if (shareType == 'fish_catch') {
         final text = _buildFishCatchShareText(
           fishType: shareData['fishType'] ?? '',
@@ -305,111 +417,26 @@ class SocialShareService {
           description: shareData['description'],
           location: shareData['location'],
         );
-        
-        print('准备分享鱼获: $text');
-        AppLogger.info(
-          '分享鱼获',
-          details: {'text': text},
-          tag: 'SOCIAL_SHARE',
+
+        await Share.share(
+          text,
+          subject: '我在钓鱼天气应用分享了我的鱼获！',
         );
-        
-        // 显示加载指示器
-        showDialog(
-          context: context,
-          barrierDismissible: false,
-          builder: (BuildContext context) {
-            return const Dialog(
-              child: Padding(
-                padding: EdgeInsets.all(20.0),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    CircularProgressIndicator(),
-                    SizedBox(width: 20),
-                    Text("准备分享..."),
-                  ],
-                ),
-              ),
-            );
-          },
-        );
-        
-        // 延迟一下，确保UI更新
-        Future.delayed(const Duration(milliseconds: 500), () {
-          // 关闭加载对话框
-          Navigator.of(context, rootNavigator: true).pop();
-          
-          // 调用系统分享
-          Share.share(
-            text,
-            subject: '我在钓鱼天气应用分享了我的鱼获！',
-          ).then((_) {
-            print('分享鱼获成功');
-            AppLogger.info('分享鱼获成功', tag: 'SOCIAL_SHARE');
-          }).catchError((error) {
-            print('分享鱼获失败: $error');
-            AppLogger.error('分享鱼获失败', error: error, tag: 'SOCIAL_SHARE');
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('分享失败: ${error.toString()}')),
-            );
-          });
-        });
       } else if (shareType == 'fishing_spot') {
         final text =
             '发现了一个不错的钓点：${shareData['spotName'] ?? ''}\n\n${shareData['description'] ?? ''}';
         final url =
             'https://www.google.com/maps?q=${shareData['latitude'] ?? 0.0},${shareData['longitude'] ?? 0.0}';
         final fullText = '$text\n\n位置：$url';
-        
-        print('准备分享钓点: $fullText');
-        AppLogger.info(
-          '分享钓点',
-          details: {'text': fullText, 'url': url},
-          tag: 'SOCIAL_SHARE',
+
+        await Share.share(
+          fullText,
+          subject: '推荐一个钓鱼好去处！',
         );
-        
-        // 显示加载指示器
-        showDialog(
-          context: context,
-          barrierDismissible: false,
-          builder: (BuildContext context) {
-            return const Dialog(
-              child: Padding(
-                padding: EdgeInsets.all(20.0),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    CircularProgressIndicator(),
-                    SizedBox(width: 20),
-                    Text("准备分享..."),
-                  ],
-                ),
-              ),
-            );
-          },
-        );
-        
-        // 延迟一下，确保UI更新
-        Future.delayed(const Duration(milliseconds: 500), () {
-          // 关闭加载对话框
-          Navigator.of(context, rootNavigator: true).pop();
-          
-          // 调用系统分享
-          Share.share(
-            fullText,
-            subject: '推荐一个钓鱼好去处！',
-          ).then((_) {
-            print('分享钓点成功');
-            AppLogger.info('分享钓点成功', tag: 'SOCIAL_SHARE');
-          }).catchError((error) {
-            print('分享钓点失败: $error');
-            AppLogger.error('分享钓点失败', error: error, tag: 'SOCIAL_SHARE');
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('分享失败: ${error.toString()}')),
-            );
-          });
-        });
       }
+
+      print('系统分享成功');
+      AppLogger.info('系统分享成功', tag: 'SOCIAL_SHARE');
     } catch (e) {
       print('系统分享失败: $e');
       AppLogger.error(
@@ -418,9 +445,12 @@ class SocialShareService {
         details: {'shareType': shareType},
         tag: 'SOCIAL_SHARE',
       );
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('分享失败: ${e.toString()}')),
-      );
+
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('分享失败: ${e.toString()}')),
+        );
+      }
     }
   }
 
