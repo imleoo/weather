@@ -25,7 +25,7 @@ class _ShareTabState extends State<ShareTab>
   final TextEditingController _fishTypeController = TextEditingController();
   final TextEditingController _weightController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
-  dynamic _selectedImage;
+  XFile? _selectedImage;
   final ImagePicker _picker = ImagePicker();
 
   @override
@@ -166,29 +166,22 @@ class _ShareTabState extends State<ShareTab>
                     child: _selectedImage != null
                         ? ClipRRect(
                             borderRadius: BorderRadius.circular(8),
-                            child: Platform.isAndroid || Platform.isIOS
-                                ? Image.file(
-                                    _selectedImage!,
-                                    fit: BoxFit.cover,
-                                  )
-                                : Image.network(
-                                    _selectedImage!.path,
-                                    fit: BoxFit.cover,
-                                    errorBuilder: (context, error, stackTrace) {
-                                      return const Column(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
-                                        children: [
-                                          Icon(Icons.broken_image,
-                                              size: 48, color: Colors.grey),
-                                          SizedBox(height: 8),
-                                          Text('图片预览不可用',
-                                              style: TextStyle(
-                                                  color: Colors.grey)),
-                                        ],
-                                      );
-                                    },
-                                  ),
+                            child: Image.file(
+                              File(_selectedImage!.path),
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) {
+                                return const Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(Icons.broken_image,
+                                        size: 48, color: Colors.grey),
+                                    SizedBox(height: 8),
+                                    Text('图片预览不可用',
+                                        style: TextStyle(color: Colors.grey)),
+                                  ],
+                                );
+                              },
+                            ),
                           )
                         : InkWell(
                             onTap: _pickImage,
@@ -255,16 +248,25 @@ class _ShareTabState extends State<ShareTab>
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
-                      onPressed: _shareFishCatch,
+                      onPressed: _isLoading ? null : _shareFishCatch,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.orange,
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(vertical: 16),
                       ),
-                      child: Text(
-                        AppLocalizations.shareNow,
-                        style: const TextStyle(fontSize: 16),
-                      ),
+                      child: _isLoading
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation(Colors.white),
+                              ),
+                            )
+                          : Text(
+                              AppLocalizations.shareNow,
+                              style: const TextStyle(fontSize: 16),
+                            ),
                     ),
                   ),
                 ],
@@ -445,15 +447,12 @@ class _ShareTabState extends State<ShareTab>
 
       if (image != null) {
         setState(() {
-          // 在Web平台上直接使用XFile，在移动端创建File对象
-          if (Platform.isAndroid || Platform.isIOS) {
-            _selectedImage = File(image.path);
-          } else {
-            _selectedImage = image;
-          }
+          // Always use XFile for consistency
+          _selectedImage = image;
         });
       }
     } catch (e) {
+      print('图片选择错误: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('选择图片失败: $e')),
       );
@@ -481,6 +480,10 @@ class _ShareTabState extends State<ShareTab>
     }
 
     try {
+      setState(() {
+        _isLoading = true;
+      });
+
       final weatherProvider =
           Provider.of<WeatherProvider>(context, listen: false);
       final location = weatherProvider.weatherData?.nearestArea;
@@ -527,9 +530,14 @@ class _ShareTabState extends State<ShareTab>
         );
       });
     } catch (e) {
+      print('分享鱼获失败: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('${AppLocalizations.shareFailed}: $e')),
       );
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
     }
   }
 

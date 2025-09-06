@@ -1,5 +1,7 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:meta/meta.dart'; // 添加meta包导入
 import '../models/fishing_spot_model.dart';
@@ -174,7 +176,7 @@ class ApiService {
     required double latitude,
     required double longitude,
     required String locationName,
-    dynamic imageFile,
+    XFile? imageFile,  // 明确指定为XFile类型
   }) async {
     final headers = await AuthService.getAuthHeaders();
 
@@ -335,46 +337,50 @@ class ApiService {
   }
 
   // 上传图片（私有方法）
-  static Future<String> _uploadImage(dynamic imageFile) async {
-    final headers = await AuthService.getAuthHeaders();
+  static Future<String> _uploadImage(XFile? imageFile) async {
+    try {
+      final headers = await AuthService.getAuthHeaders();
 
-    final request = http.MultipartRequest(
-      'POST',
-      Uri.parse('$_baseUrl/upload/image'),
-    );
-
-    request.headers.addAll(headers);
-
-    // 根据平台处理图片文件
-    if (imageFile is XFile) {
-      // Web平台 - XFile
-      final bytes = await imageFile.readAsBytes();
-      request.files.add(
-        http.MultipartFile.fromBytes(
-          'image',
-          bytes,
-          filename: imageFile.name,
-        ),
+      final request = http.MultipartRequest(
+        'POST',
+        Uri.parse('$_baseUrl/upload/image'),
       );
-    } else {
-      // 移动端 - File
-      request.files.add(
-        await http.MultipartFile.fromPath(
-          'image',
-          imageFile.path,
-        ),
-      );
-    }
 
-    final streamedResponse = await request.send();
-    final response = await http.Response.fromStream(streamedResponse);
+      request.headers.addAll(headers);
 
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      return data['image_url'] as String;
-    } else {
-      final errorData = jsonDecode(response.body);
-      throw Exception(errorData['message'] ?? '图片上传失败');
+      // Handle XFile upload
+      if (imageFile != null) {
+        // For both web and mobile, read as bytes
+        final bytes = await imageFile.readAsBytes();
+        request.files.add(
+          http.MultipartFile.fromBytes(
+            'image',
+            bytes,
+            filename: imageFile.name,
+            contentType: MediaType('image', 'jpeg'), // Add content type
+          ),
+        );
+      } else {
+        throw Exception('图片文件为空');
+      }
+
+      print('上传图片: ${imageFile.name} (${request.files.first.length} bytes)');
+
+      final streamedResponse = await request.send();
+      final response = await http.Response.fromStream(streamedResponse);
+
+      print('图片上传响应: ${response.statusCode} - ${response.body}');
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return data['image_url'] as String;
+      } else {
+        final errorData = jsonDecode(response.body);
+        throw Exception(errorData['message'] ?? '图片上传失败');
+      }
+    } catch (e) {
+      print('图片上传错误: $e');
+      throw Exception('图片上传失败: $e');
     }
   }
 

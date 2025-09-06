@@ -7,6 +7,7 @@ import 'dart:io';
 import 'package:intl/intl.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:path_provider/path_provider.dart';
 
 /// 日志级别枚举
 enum LogLevel {
@@ -31,14 +32,16 @@ class AppLogger {
     bool enableConsoleLog = true,
     bool enableFileLog = false,
     LogLevel minLevel = LogLevel.debug,
-    String logDirectory = '/logs',
+    String? logDirectory,
   }) async {
     _enableConsoleLog = enableConsoleLog;
     _enableFileLog = enableFileLog;
     _minLevel = minLevel;
 
     if (_enableFileLog) {
-      await _initLogFile(logDirectory);
+      // Use app's document directory if logDirectory is not provided
+      String effectiveLogDirectory = logDirectory ?? await _getDefaultLogDirectory();
+      await _initLogFile(effectiveLogDirectory);
     }
 
     info(
@@ -49,6 +52,22 @@ class AppLogger {
         'minLevel': minLevel.toString(),
       },
     );
+  }
+
+  /// 获取默认日志目录
+  static Future<String> _getDefaultLogDirectory() async {
+    try {
+      // Use app's document directory for logs
+      final directory = await getApplicationDocumentsDirectory();
+      return '${directory.path}/logs';
+    } catch (e) {
+      // Fallback to temp directory if documents directory is not available
+      if (kDebugMode) {
+        print('获取应用文档目录失败，使用临时目录: $e');
+      }
+      final tempDir = Directory.systemTemp;
+      return '${tempDir.path}/fishing_weather_logs';
+    }
   }
 
   /// 初始化日志文件

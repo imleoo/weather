@@ -25,7 +25,7 @@ class _FishingSpotsTabState extends State<FishingSpotsTab>
   late TabController _tabController;
   List<FishingSpot> _nearbySpots = [];
   bool _isLoading = false;
-  bool _showMap = false;
+  bool _showMap = true; // 默认显示地图
   String _spotDescription = '';
   LatLng? _currentLocation;
 
@@ -89,6 +89,25 @@ class _FishingSpotsTabState extends State<FishingSpotsTab>
         setState(() {
           _nearbySpots = spots;
         });
+        
+        // 如果有钓点，记录日志
+        if (spots.isNotEmpty) {
+          AppLogger.info(
+            '加载附近钓点成功',
+            details: {
+              'count': spots.length,
+              'location': '$lat, $lng',
+              'spots': spots.map((s) => s.name).toList(),
+            },
+            tag: 'FISHING_SPOTS',
+          );
+        } else {
+          AppLogger.info(
+            '附近没有钓点',
+            details: {'location': '$lat, $lng'},
+            tag: 'FISHING_SPOTS',
+          );
+        }
       }
     } catch (e) {
       print('加载附近钓点失败: $e');
@@ -180,45 +199,67 @@ class _FishingSpotsTabState extends State<FishingSpotsTab>
       return const Center(child: CircularProgressIndicator());
     }
 
-    if (_nearbySpots.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.location_off, size: 64, color: Colors.grey),
-            const SizedBox(height: 16),
-            Text(
-              AppLocalizations.noNearbySpots,
-              style: const TextStyle(fontSize: 16, color: Colors.grey),
+    // 默认显示地图视图，包含所有钓点标记
+    if (_showMap) {
+      return Stack(
+        children: [
+          FishingMapWidget(
+            fishingSpots: _nearbySpots,
+            currentLocation: _currentLocation,
+            onSpotTap: (spot) {
+              _showSpotDetails(spot);
+            },
+            onMapTap: (point) {
+              AppLogger.info(
+                '点击地图',
+                details: {'lat': point.latitude, 'lng': point.longitude},
+                tag: 'FISHING_SPOTS',
+              );
+              // 显示分享钓点选项
+              _showShareSpotOption(point);
+            },
+          ),
+          // 在地图上显示钓点数量指示器
+          if (_nearbySpots.isNotEmpty)
+            Positioned(
+              top: 16,
+              left: 16,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.9),
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.place, color: Colors.green, size: 16),
+                    const SizedBox(width: 4),
+                    Text(
+                      '${_nearbySpots.length} 个钓点',
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.green,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: _loadNearbySpots,
-              child: Text(AppLocalizations.refresh),
-            ),
-          ],
-        ),
+        ],
       );
     }
 
-    if (_showMap) {
-      // 地图视图
-      return FishingMapWidget(
-        fishingSpots: _nearbySpots,
-        currentLocation: _currentLocation,
-        onSpotTap: (spot) {
-          _showSpotDetails(spot);
-        },
-        onMapTap: (point) {
-          AppLogger.info(
-            '点击地图',
-            details: {'lat': point.latitude, 'lng': point.longitude},
-            tag: 'FISHING_SPOTS',
-          );
-        },
-      );
-    } else {
-      // 列表视图
+    // 列表视图 - 当有钓点时显示详细列表
+    if (_nearbySpots.isNotEmpty) {
       return ListView.builder(
         itemCount: _nearbySpots.length,
         itemBuilder: (context, index) {
@@ -255,6 +296,31 @@ class _FishingSpotsTabState extends State<FishingSpotsTab>
         },
       );
     }
+
+    // 当没有钓点时的占位显示
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.location_off, size: 64, color: Colors.grey),
+          const SizedBox(height: 16),
+          Text(
+            AppLocalizations.noNearbySpots,
+            style: const TextStyle(fontSize: 16, color: Colors.grey),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            '当前位置: ${_currentLocation?.latitude.toStringAsFixed(4)}, ${_currentLocation?.longitude.toStringAsFixed(4)}',
+            style: const TextStyle(fontSize: 12, color: Colors.grey),
+          ),
+          const SizedBox(height: 16),
+          ElevatedButton(
+            onPressed: _loadNearbySpots,
+            child: Text(AppLocalizations.refresh),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _buildShareCurrentSpot() {
@@ -382,6 +448,63 @@ class _FishingSpotsTabState extends State<FishingSpotsTab>
       print('=== 登录检查通过，准备分享 ===');
       _shareCurrentSpotInternal();
     });
+  }
+
+  void _showShareSpotOption(LatLng point) {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              '分享这个位置作为钓点？',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              '坐标: ${point.latitude.toStringAsFixed(6)}, ${point.longitude.toStringAsFixed(6)}',
+              style: const TextStyle(color: Colors.grey),
+            ),
+            const SizedBox(height: 24),
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                      _shareCustomSpot(point);
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green,
+                      foregroundColor: Colors.white,
+                    ),
+                    child: const Text('分享钓点'),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text('取消'),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _shareCustomSpot(LatLng point) {
+    // 切换到分享标签页并设置位置
+    _tabController.animateTo(1);
+    // 可以在这里预填充位置信息
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('请在分享页面填写钓点信息')),
+    );
   }
 
   void _shareCurrentSpotInternal() async {
