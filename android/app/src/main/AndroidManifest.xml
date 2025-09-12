@@ -53,6 +53,7 @@
         <receiver
             android:name=".FishingWeatherWidgetLargeProvider"
             android:exported="true"
+            android:icon="@drawable/widget_preview"
             android:label="钓鱼天气 (大)">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />

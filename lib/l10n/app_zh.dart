@@ -9,6 +9,7 @@ class AppZh {
   static const String privacyPolicy = '隐私政策';
   static const String termsOfService = '服务条款';
   static const String openSourceLicenses = '开源协议';
+  static const String telegramCommunity = 'Telegram社区';
   static const String version = '版本';
   static const String retry = '重试';
   static const String loadingFailed = '加载失败';
@@ -23,6 +24,10 @@ class AppZh {
   static const String off = '关闭';
   static const String save = '保存';
   static const String cancel = '取消';
+  static const String updateWidget = '更新桌面小部件';
+  static const String updateWidgetSubtitle = '手动更新钓鱼天气小部件数据';
+  static const String updatingWidgetData = '正在更新小部件数据...';
+  static const String widgetDataUpdated = '小部件数据已更新';
 
   // 城市搜索
   static const String selectCity = '选择城市';
@@ -136,7 +141,8 @@ class AppZh {
   static const String logout = '退出登录';
   static const String logoutSuccess = '退出成功';
   static const String logoutFailed = '退出失败';
-  static const String aboutDescription = '钓鱼天气是一个专为钓鱼爱好者设计的天气应用，提供专业的钓鱼天气预报和社区分享功能。';
+  static const String aboutDescription =
+      '钓鱼天气是一个专为钓鱼爱好者设计的天气应用，提供专业的钓鱼天气预报和社区分享功能。';
 
   // 登录注册
   static const String login = '登录';

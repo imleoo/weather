@@ -5,7 +5,6 @@ import 'l10n/app_localizations.dart';
 import 'providers/weather_provider.dart';
 import 'providers/settings_provider.dart';
 import 'screens/main_navigation_screen.dart';
-import 'services/auth_service.dart';
 import 'services/widget_service.dart';
 import 'utils/app_lifecycle_manager.dart';
 import 'utils/app_logger.dart';
@@ -20,11 +19,8 @@ void main() async {
     enableFileLog: false, // 禁用文件日志，避免Android权限问题
     minLevel: LogLevel.debug,
   );
-  
-  AppLogger.info('应用启动', tag: 'APP');
 
-  // 尝试自动登录
-  await _tryAutoLogin();
+  AppLogger.info('应用启动', tag: 'APP');
 
   // 初始化小部件服务（添加错误处理）
   try {
@@ -81,20 +77,5 @@ class MyApp extends StatelessWidget {
         },
       ),
     );
-  }
-}
-
-// 尝试自动登录
-Future<void> _tryAutoLogin() async {
-  try {
-    final isLoggedIn = await AuthService.isLoggedIn();
-    if (isLoggedIn) {
-      final user = await AuthService.getCurrentUser();
-      if (user != null) {
-        AppLogger.info('自动登录成功', details: {'email': user.email}, tag: 'AUTH');
-      }
-    }
-  } catch (e) {
-    AppLogger.error('自动登录失败', error: e, tag: 'AUTH');
   }
 }

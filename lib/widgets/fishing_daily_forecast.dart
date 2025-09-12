@@ -12,11 +12,17 @@ class FishingDailyForecast extends StatefulWidget {
   State<FishingDailyForecast> createState() => _FishingDailyForecastState();
 }
 
-class _FishingDailyForecastState extends State<FishingDailyForecast> {
+class _FishingDailyForecastState extends State<FishingDailyForecast>
+    with AutomaticKeepAliveClientMixin {
   int _selectedDayIndex = 0;
 
   @override
+  bool get wantKeepAlive => true;
+
+  @override
   Widget build(BuildContext context) {
+    super.build(context); // 必须调用super.build()
+    
     if (widget.forecast.isEmpty) {
       return Center(
         child: Text(AppLocalizations.noWeatherData),

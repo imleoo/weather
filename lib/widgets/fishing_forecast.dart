@@ -168,6 +168,8 @@ class _FishingForecastState extends State<FishingForecast> {
                 controller: _scrollController,
                 scrollDirection: Axis.horizontal,
                 itemCount: nextHours.length,
+                addAutomaticKeepAlives: true,
+                addRepaintBoundaries: true,
                 itemBuilder: (context, index) {
                   final hourly = nextHours[index];
                   final isSelected = _selectedIndex == index;

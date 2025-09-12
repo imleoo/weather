@@ -38,6 +38,8 @@ class AppLocalizations {
       isEnglish ? AppEn.termsOfService : AppZh.termsOfService;
   static String get openSourceLicenses =>
       isEnglish ? AppEn.openSourceLicenses : AppZh.openSourceLicenses;
+  static String get telegramCommunity =>
+      isEnglish ? AppEn.telegramCommunity : AppZh.telegramCommunity;
   static String get version => isEnglish ? AppEn.version : AppZh.version;
   static String get retry => isEnglish ? AppEn.retry : AppZh.retry;
   static String get loadingFailed =>
@@ -56,6 +58,14 @@ class AppLocalizations {
   static String get off => isEnglish ? AppEn.off : AppZh.off;
   static String get save => isEnglish ? AppEn.save : AppZh.save;
   static String get cancel => isEnglish ? AppEn.cancel : AppZh.cancel;
+  static String get updateWidget =>
+      isEnglish ? AppEn.updateWidget : AppZh.updateWidget;
+  static String get updateWidgetSubtitle =>
+      isEnglish ? AppEn.updateWidgetSubtitle : AppZh.updateWidgetSubtitle;
+  static String get updatingWidgetData =>
+      isEnglish ? AppEn.updatingWidgetData : AppZh.updatingWidgetData;
+  static String get widgetDataUpdated =>
+      isEnglish ? AppEn.widgetDataUpdated : AppZh.widgetDataUpdated;
 
   // 城市搜索
   static String get selectCity =>
@@ -169,106 +179,176 @@ class AppLocalizations {
 
   // Navigation
   static String get weather => isEnglish ? AppEn.weather : AppZh.weather;
-  static String get fishingSpots => isEnglish ? AppEn.fishingSpots : AppZh.fishingSpots;
+  static String get fishingSpots =>
+      isEnglish ? AppEn.fishingSpots : AppZh.fishingSpots;
   static String get share => isEnglish ? AppEn.share : AppZh.share;
   static String get my => isEnglish ? AppEn.my : AppZh.my;
 
   // Fishing Spots
-  static String get nearbySpots => isEnglish ? AppEn.nearbySpots : AppZh.nearbySpots;
-  static String get shareCurrentSpot => isEnglish ? AppEn.shareCurrentSpot : AppZh.shareCurrentSpot;
-  static String get noNearbySpots => isEnglish ? AppEn.noNearbySpots : AppZh.noNearbySpots;
+  static String get nearbySpots =>
+      isEnglish ? AppEn.nearbySpots : AppZh.nearbySpots;
+  static String get shareCurrentSpot =>
+      isEnglish ? AppEn.shareCurrentSpot : AppZh.shareCurrentSpot;
+  static String get noNearbySpots =>
+      isEnglish ? AppEn.noNearbySpots : AppZh.noNearbySpots;
   static String get refresh => isEnglish ? AppEn.refresh : AppZh.refresh;
   static String get distance => isEnglish ? AppEn.distance : AppZh.distance;
-  static String get description => isEnglish ? AppEn.description : AppZh.description;
+  static String get description =>
+      isEnglish ? AppEn.description : AppZh.description;
   static String get navigate => isEnglish ? AppEn.navigate : AppZh.navigate;
   static String get close => isEnglish ? AppEn.close : AppZh.close;
-  static String get currentLocation => isEnglish ? AppEn.currentLocation : AppZh.currentLocation;
+  static String get currentLocation =>
+      isEnglish ? AppEn.currentLocation : AppZh.currentLocation;
   static String get location => isEnglish ? AppEn.location : AppZh.location;
-  static String get coordinates => isEnglish ? AppEn.coordinates : AppZh.coordinates;
-  static String get spotDescription => isEnglish ? AppEn.spotDescription : AppZh.spotDescription;
-  static String get describeThisSpot => isEnglish ? AppEn.describeThisSpot : AppZh.describeThisSpot;
-  static String get shareThisSpot => isEnglish ? AppEn.shareThisSpot : AppZh.shareThisSpot;
-  static String get locationNotAvailable => isEnglish ? AppEn.locationNotAvailable : AppZh.locationNotAvailable;
+  static String get coordinates =>
+      isEnglish ? AppEn.coordinates : AppZh.coordinates;
+  static String get spotDescription =>
+      isEnglish ? AppEn.spotDescription : AppZh.spotDescription;
+  static String get describeThisSpot =>
+      isEnglish ? AppEn.describeThisSpot : AppZh.describeThisSpot;
+  static String get shareThisSpot =>
+      isEnglish ? AppEn.shareThisSpot : AppZh.shareThisSpot;
+  static String get locationNotAvailable =>
+      isEnglish ? AppEn.locationNotAvailable : AppZh.locationNotAvailable;
 
   // Share
-  static String get shareCatch => isEnglish ? AppEn.shareCatch : AppZh.shareCatch;
-  static String get communityShares => isEnglish ? AppEn.communityShares : AppZh.communityShares;
-  static String get shareFishCatch => isEnglish ? AppEn.shareFishCatch : AppZh.shareFishCatch;
+  static String get shareCatch =>
+      isEnglish ? AppEn.shareCatch : AppZh.shareCatch;
+  static String get communityShares =>
+      isEnglish ? AppEn.communityShares : AppZh.communityShares;
+  static String get shareFishCatch =>
+      isEnglish ? AppEn.shareFishCatch : AppZh.shareFishCatch;
   static String get fishType => isEnglish ? AppEn.fishType : AppZh.fishType;
-  static String get enterFishType => isEnglish ? AppEn.enterFishType : AppZh.enterFishType;
+  static String get enterFishType =>
+      isEnglish ? AppEn.enterFishType : AppZh.enterFishType;
   static String get weight => isEnglish ? AppEn.weight : AppZh.weight;
-  static String get enterWeight => isEnglish ? AppEn.enterWeight : AppZh.enterWeight;
-  static String get shareYourExperience => isEnglish ? AppEn.shareYourExperience : AppZh.shareYourExperience;
+  static String get enterWeight =>
+      isEnglish ? AppEn.enterWeight : AppZh.enterWeight;
+  static String get shareYourExperience =>
+      isEnglish ? AppEn.shareYourExperience : AppZh.shareYourExperience;
   static String get addPhoto => isEnglish ? AppEn.addPhoto : AppZh.addPhoto;
   static String get shareNow => isEnglish ? AppEn.shareNow : AppZh.shareNow;
-  static String get noCommunityShares => isEnglish ? AppEn.noCommunityShares : AppZh.noCommunityShares;
-  static String get pleaseFillRequired => isEnglish ? AppEn.pleaseFillRequired : AppZh.pleaseFillRequired;
-  static String get shareSuccess => isEnglish ? AppEn.shareSuccess : AppZh.shareSuccess;
-  static String get shareFailed => isEnglish ? AppEn.shareFailed : AppZh.shareFailed;
+  static String get noCommunityShares =>
+      isEnglish ? AppEn.noCommunityShares : AppZh.noCommunityShares;
+  static String get pleaseFillRequired =>
+      isEnglish ? AppEn.pleaseFillRequired : AppZh.pleaseFillRequired;
+  static String get shareSuccess =>
+      isEnglish ? AppEn.shareSuccess : AppZh.shareSuccess;
+  static String get shareFailed =>
+      isEnglish ? AppEn.shareFailed : AppZh.shareFailed;
 
   // User
-  static String get pleaseLogin => isEnglish ? AppEn.pleaseLogin : AppZh.pleaseLogin;
-  static String get loginToAccessFeatures => isEnglish ? AppEn.loginToAccessFeatures : AppZh.loginToAccessFeatures;
-  static String get loginRegister => isEnglish ? AppEn.loginRegister : AppZh.loginRegister;
-  static String get editProfile => isEnglish ? AppEn.editProfile : AppZh.editProfile;
-  static String get myFishCatches => isEnglish ? AppEn.myFishCatches : AppZh.myFishCatches;
-  static String get myFishingSpots => isEnglish ? AppEn.myFishingSpots : AppZh.myFishingSpots;
-  static String get likedShares => isEnglish ? AppEn.likedShares : AppZh.likedShares;
+  static String get pleaseLogin =>
+      isEnglish ? AppEn.pleaseLogin : AppZh.pleaseLogin;
+  static String get loginToAccessFeatures =>
+      isEnglish ? AppEn.loginToAccessFeatures : AppZh.loginToAccessFeatures;
+  static String get loginRegister =>
+      isEnglish ? AppEn.loginRegister : AppZh.loginRegister;
+  static String get editProfile =>
+      isEnglish ? AppEn.editProfile : AppZh.editProfile;
+  static String get myFishCatches =>
+      isEnglish ? AppEn.myFishCatches : AppZh.myFishCatches;
+  static String get myFishingSpots =>
+      isEnglish ? AppEn.myFishingSpots : AppZh.myFishingSpots;
+  static String get likedShares =>
+      isEnglish ? AppEn.likedShares : AppZh.likedShares;
   static String get help => isEnglish ? AppEn.help : AppZh.help;
   static String get about => isEnglish ? AppEn.about : AppZh.about;
-  static String get confirmLogout => isEnglish ? AppEn.confirmLogout : AppZh.confirmLogout;
-  static String get logoutConfirmMessage => isEnglish ? AppEn.logoutConfirmMessage : AppZh.logoutConfirmMessage;
+  static String get confirmLogout =>
+      isEnglish ? AppEn.confirmLogout : AppZh.confirmLogout;
+  static String get logoutConfirmMessage =>
+      isEnglish ? AppEn.logoutConfirmMessage : AppZh.logoutConfirmMessage;
   static String get confirm => isEnglish ? AppEn.confirm : AppZh.confirm;
   static String get logout => isEnglish ? AppEn.logout : AppZh.logout;
-  static String get logoutSuccess => isEnglish ? AppEn.logoutSuccess : AppZh.logoutSuccess;
-  static String get logoutFailed => isEnglish ? AppEn.logoutFailed : AppZh.logoutFailed;
-  static String get aboutDescription => isEnglish ? AppEn.aboutDescription : AppZh.aboutDescription;
+  static String get logoutSuccess =>
+      isEnglish ? AppEn.logoutSuccess : AppZh.logoutSuccess;
+  static String get logoutFailed =>
+      isEnglish ? AppEn.logoutFailed : AppZh.logoutFailed;
+  static String get aboutDescription =>
+      isEnglish ? AppEn.aboutDescription : AppZh.aboutDescription;
 
   // Login/Register
   static String get login => isEnglish ? AppEn.login : AppZh.login;
   static String get register => isEnglish ? AppEn.register : AppZh.register;
-  static String get welcomeBack => isEnglish ? AppEn.welcomeBack : AppZh.welcomeBack;
-  static String get loginToContinue => isEnglish ? AppEn.loginToContinue : AppZh.loginToContinue;
-  static String get createAccount => isEnglish ? AppEn.createAccount : AppZh.createAccount;
-  static String get joinOurCommunity => isEnglish ? AppEn.joinOurCommunity : AppZh.joinOurCommunity;
+  static String get welcomeBack =>
+      isEnglish ? AppEn.welcomeBack : AppZh.welcomeBack;
+  static String get loginToContinue =>
+      isEnglish ? AppEn.loginToContinue : AppZh.loginToContinue;
+  static String get createAccount =>
+      isEnglish ? AppEn.createAccount : AppZh.createAccount;
+  static String get joinOurCommunity =>
+      isEnglish ? AppEn.joinOurCommunity : AppZh.joinOurCommunity;
   static String get email => isEnglish ? AppEn.email : AppZh.email;
-  static String get enterEmail => isEnglish ? AppEn.enterEmail : AppZh.enterEmail;
+  static String get enterEmail =>
+      isEnglish ? AppEn.enterEmail : AppZh.enterEmail;
   static String get password => isEnglish ? AppEn.password : AppZh.password;
-  static String get enterPassword => isEnglish ? AppEn.enterPassword : AppZh.enterPassword;
+  static String get enterPassword =>
+      isEnglish ? AppEn.enterPassword : AppZh.enterPassword;
   static String get nickname => isEnglish ? AppEn.nickname : AppZh.nickname;
-  static String get enterNickname => isEnglish ? AppEn.enterNickname : AppZh.enterNickname;
-  static String get confirmPassword => isEnglish ? AppEn.confirmPassword : AppZh.confirmPassword;
-  static String get enterPasswordAgain => isEnglish ? AppEn.enterPasswordAgain : AppZh.enterPasswordAgain;
-  static String get forgotPassword => isEnglish ? AppEn.forgotPassword : AppZh.forgotPassword;
-  static String get termsAgreement => isEnglish ? AppEn.termsAgreement : AppZh.termsAgreement;
-  static String get emailRequired => isEnglish ? AppEn.emailRequired : AppZh.emailRequired;
-  static String get emailInvalid => isEnglish ? AppEn.emailInvalid : AppZh.emailInvalid;
-  static String get passwordRequired => isEnglish ? AppEn.passwordRequired : AppZh.passwordRequired;
-  static String get passwordTooShort => isEnglish ? AppEn.passwordTooShort : AppZh.passwordTooShort;
-  static String get nicknameRequired => isEnglish ? AppEn.nicknameRequired : AppZh.nicknameRequired;
-  static String get nicknameTooShort => isEnglish ? AppEn.nicknameTooShort : AppZh.nicknameTooShort;
-  static String get confirmPasswordRequired => isEnglish ? AppEn.confirmPasswordRequired : AppZh.confirmPasswordRequired;
-  static String get passwordsDoNotMatch => isEnglish ? AppEn.passwordsDoNotMatch : AppZh.passwordsDoNotMatch;
-  static String get loginSuccess => isEnglish ? AppEn.loginSuccess : AppZh.loginSuccess;
-  static String get loginFailed => isEnglish ? AppEn.loginFailed : AppZh.loginFailed;
-  static String get registerSuccess => isEnglish ? AppEn.registerSuccess : AppZh.registerSuccess;
-  static String get registerFailed => isEnglish ? AppEn.registerFailed : AppZh.registerFailed;
+  static String get enterNickname =>
+      isEnglish ? AppEn.enterNickname : AppZh.enterNickname;
+  static String get confirmPassword =>
+      isEnglish ? AppEn.confirmPassword : AppZh.confirmPassword;
+  static String get enterPasswordAgain =>
+      isEnglish ? AppEn.enterPasswordAgain : AppZh.enterPasswordAgain;
+  static String get forgotPassword =>
+      isEnglish ? AppEn.forgotPassword : AppZh.forgotPassword;
+  static String get termsAgreement =>
+      isEnglish ? AppEn.termsAgreement : AppZh.termsAgreement;
+  static String get emailRequired =>
+      isEnglish ? AppEn.emailRequired : AppZh.emailRequired;
+  static String get emailInvalid =>
+      isEnglish ? AppEn.emailInvalid : AppZh.emailInvalid;
+  static String get passwordRequired =>
+      isEnglish ? AppEn.passwordRequired : AppZh.passwordRequired;
+  static String get passwordTooShort =>
+      isEnglish ? AppEn.passwordTooShort : AppZh.passwordTooShort;
+  static String get nicknameRequired =>
+      isEnglish ? AppEn.nicknameRequired : AppZh.nicknameRequired;
+  static String get nicknameTooShort =>
+      isEnglish ? AppEn.nicknameTooShort : AppZh.nicknameTooShort;
+  static String get confirmPasswordRequired =>
+      isEnglish ? AppEn.confirmPasswordRequired : AppZh.confirmPasswordRequired;
+  static String get passwordsDoNotMatch =>
+      isEnglish ? AppEn.passwordsDoNotMatch : AppZh.passwordsDoNotMatch;
+  static String get loginSuccess =>
+      isEnglish ? AppEn.loginSuccess : AppZh.loginSuccess;
+  static String get loginFailed =>
+      isEnglish ? AppEn.loginFailed : AppZh.loginFailed;
+  static String get registerSuccess =>
+      isEnglish ? AppEn.registerSuccess : AppZh.registerSuccess;
+  static String get registerFailed =>
+      isEnglish ? AppEn.registerFailed : AppZh.registerFailed;
 
   // Profile
   static String get bio => isEnglish ? AppEn.bio : AppZh.bio;
-  static String get introduceBriefly => isEnglish ? AppEn.introduceBriefly : AppZh.introduceBriefly;
-  static String get saveChanges => isEnglish ? AppEn.saveChanges : AppZh.saveChanges;
-  static String get changePassword => isEnglish ? AppEn.changePassword : AppZh.changePassword;
-  static String get accountInfo => isEnglish ? AppEn.accountInfo : AppZh.accountInfo;
+  static String get introduceBriefly =>
+      isEnglish ? AppEn.introduceBriefly : AppZh.introduceBriefly;
+  static String get saveChanges =>
+      isEnglish ? AppEn.saveChanges : AppZh.saveChanges;
+  static String get changePassword =>
+      isEnglish ? AppEn.changePassword : AppZh.changePassword;
+  static String get accountInfo =>
+      isEnglish ? AppEn.accountInfo : AppZh.accountInfo;
   static String get joinDate => isEnglish ? AppEn.joinDate : AppZh.joinDate;
-  static String get lastUpdate => isEnglish ? AppEn.lastUpdate : AppZh.lastUpdate;
-  static String get profileUpdateSuccess => isEnglish ? AppEn.profileUpdateSuccess : AppZh.profileUpdateSuccess;
-  static String get profileUpdateFailed => isEnglish ? AppEn.profileUpdateFailed : AppZh.profileUpdateFailed;
-  static String get oldPassword => isEnglish ? AppEn.oldPassword : AppZh.oldPassword;
-  static String get newPassword => isEnglish ? AppEn.newPassword : AppZh.newPassword;
-  static String get confirmNewPassword => isEnglish ? AppEn.confirmNewPassword : AppZh.confirmNewPassword;
-  static String get oldPasswordRequired => isEnglish ? AppEn.oldPasswordRequired : AppZh.oldPasswordRequired;
-  static String get newPasswordRequired => isEnglish ? AppEn.newPasswordRequired : AppZh.newPasswordRequired;
-  static String get passwordChangeSuccess => isEnglish ? AppEn.passwordChangeSuccess : AppZh.passwordChangeSuccess;
-  static String get passwordChangeFailed => isEnglish ? AppEn.passwordChangeFailed : AppZh.passwordChangeFailed;
+  static String get lastUpdate =>
+      isEnglish ? AppEn.lastUpdate : AppZh.lastUpdate;
+  static String get profileUpdateSuccess =>
+      isEnglish ? AppEn.profileUpdateSuccess : AppZh.profileUpdateSuccess;
+  static String get profileUpdateFailed =>
+      isEnglish ? AppEn.profileUpdateFailed : AppZh.profileUpdateFailed;
+  static String get oldPassword =>
+      isEnglish ? AppEn.oldPassword : AppZh.oldPassword;
+  static String get newPassword =>
+      isEnglish ? AppEn.newPassword : AppZh.newPassword;
+  static String get confirmNewPassword =>
+      isEnglish ? AppEn.confirmNewPassword : AppZh.confirmNewPassword;
+  static String get oldPasswordRequired =>
+      isEnglish ? AppEn.oldPasswordRequired : AppZh.oldPasswordRequired;
+  static String get newPasswordRequired =>
+      isEnglish ? AppEn.newPasswordRequired : AppZh.newPasswordRequired;
+  static String get passwordChangeSuccess =>
+      isEnglish ? AppEn.passwordChangeSuccess : AppZh.passwordChangeSuccess;
+  static String get passwordChangeFailed =>
+      isEnglish ? AppEn.passwordChangeFailed : AppZh.passwordChangeFailed;
 }

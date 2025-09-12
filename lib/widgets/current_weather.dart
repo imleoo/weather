@@ -14,23 +14,27 @@ class CurrentWeather extends StatefulWidget {
 }
 
 class _CurrentWeatherState extends State<CurrentWeather>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, AutomaticKeepAliveClientMixin {
   late AnimationController _animationController;
   late Animation<double> _scaleAnimation;
   late Animation<double> _rotateAnimation;
   bool _isVisible = true;
 
   @override
+  bool get wantKeepAlive => true;
+
+  @override
   void initState() {
     super.initState();
+    // 优化：减少动画持续时间，降低性能开销
     _animationController = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 10),
+      duration: const Duration(seconds: 6), // 从10秒减少到6秒
     );
 
     _scaleAnimation = Tween<double>(
       begin: 1.0,
-      end: 1.1,
+      end: 1.05, // 减少缩放幅度
     ).animate(
       CurvedAnimation(
         parent: _animationController,
@@ -39,8 +43,8 @@ class _CurrentWeatherState extends State<CurrentWeather>
     );
 
     _rotateAnimation = Tween<double>(
-      begin: -0.05,
-      end: 0.05,
+      begin: -0.02, // 减少旋转幅度
+      end: 0.02,
     ).animate(
       CurvedAnimation(
         parent: _animationController,
@@ -48,7 +52,12 @@ class _CurrentWeatherState extends State<CurrentWeather>
       ),
     );
 
-    _startAnimation();
+    // 延迟启动动画，让主界面先渲染完成
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _startAnimation();
+      }
+    });
   }
 
   void _startAnimation() {
@@ -71,6 +80,8 @@ class _CurrentWeatherState extends State<CurrentWeather>
 
   @override
   Widget build(BuildContext context) {
+    super.build(context); // 必须调用super.build()
+    
     final weatherColor = WeatherIcons.getWeatherColor(
       widget.currentCondition.weatherCode,
     );

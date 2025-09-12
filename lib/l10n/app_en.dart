@@ -9,6 +9,7 @@ class AppEn {
   static const String privacyPolicy = 'Privacy Policy';
   static const String termsOfService = 'Terms of Service';
   static const String openSourceLicenses = 'Open Source Licenses';
+  static const String telegramCommunity = 'Telegram Community';
   static const String version = 'Version';
   static const String retry = 'Retry';
   static const String loadingFailed = 'Loading Failed';
@@ -23,6 +24,11 @@ class AppEn {
   static const String off = 'Off';
   static const String save = 'Save';
   static const String cancel = 'Cancel';
+  static const String updateWidget = 'Update Widget';
+  static const String updateWidgetSubtitle =
+      'Manually update fishing weather widget data';
+  static const String updatingWidgetData = 'Updating widget data...';
+  static const String widgetDataUpdated = 'Widget data updated';
 
   // 城市搜索
   static const String selectCity = 'Select City';
@@ -101,7 +107,8 @@ class AppEn {
   static const String location = 'Location';
   static const String coordinates = 'Coordinates';
   static const String spotDescription = 'Spot Description';
-  static const String describeThisSpot = 'Describe the features of this spot...';
+  static const String describeThisSpot =
+      'Describe the features of this spot...';
   static const String shareThisSpot = 'Share This Spot';
   static const String locationNotAvailable = 'Location not available';
 
@@ -137,7 +144,8 @@ class AppEn {
   static const String logout = 'Logout';
   static const String logoutSuccess = 'Logout successful';
   static const String logoutFailed = 'Logout failed';
-  static const String aboutDescription = 'Fishing Weather is a weather app designed specifically for fishing enthusiasts, providing professional fishing weather forecasts and community sharing features.';
+  static const String aboutDescription =
+      'Fishing Weather is a weather app designed specifically for fishing enthusiasts, providing professional fishing weather forecasts and community sharing features.';
 
   // Login/Register
   static const String login = 'Login';
@@ -155,13 +163,16 @@ class AppEn {
   static const String confirmPassword = 'Confirm Password';
   static const String enterPasswordAgain = 'Enter password again';
   static const String forgotPassword = 'Forgot Password?';
-  static const String termsAgreement = 'By registering you agree to our Terms of Service and Privacy Policy';
+  static const String termsAgreement =
+      'By registering you agree to our Terms of Service and Privacy Policy';
   static const String emailRequired = 'Email is required';
   static const String emailInvalid = 'Please enter a valid email';
   static const String passwordRequired = 'Password is required';
-  static const String passwordTooShort = 'Password must be at least 6 characters';
+  static const String passwordTooShort =
+      'Password must be at least 6 characters';
   static const String nicknameRequired = 'Nickname is required';
-  static const String nicknameTooShort = 'Nickname must be at least 2 characters';
+  static const String nicknameTooShort =
+      'Nickname must be at least 2 characters';
   static const String confirmPasswordRequired = 'Please confirm password';
   static const String passwordsDoNotMatch = 'Passwords do not match';
   static const String loginSuccess = 'Login successful';

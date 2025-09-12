@@ -4,7 +4,6 @@ import '../utils/weather_icons.dart';
 import '../utils/date_formatter.dart';
 import '../l10n/app_localizations.dart';
 import '../utils/animation_utils.dart';
-import '../services/ad_service.dart';
 import '../providers/settings_provider.dart';
 import 'package:provider/provider.dart';
 
@@ -20,42 +19,17 @@ class HourlyForecast extends StatefulWidget {
 class _HourlyForecastState extends State<HourlyForecast> {
   final ScrollController _scrollController = ScrollController();
   int _selectedIndex = 0;
-  bool _isLoading = false;
-
+  
   @override
   void initState() {
     super.initState();
     // 在初始化时找到离当前时间最近的小时
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _selectNearestHour();
-      // 初始化广告服务
-      AdService.initialize();
     });
   }
 
-  // 显示激励广告
-  Future<void> _showRewardedAd(BuildContext context) async {
-    setState(() {
-      _isLoading = true;
-    });
-
-    final result = await AdService.showRewardedAd(context);
-
-    setState(() {
-      _isLoading = false;
-    });
-
-    if (!result) {
-      // 广告加载失败或未准备好
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(AppLocalizations.adNotAvailable),
-          duration: const Duration(seconds: 2),
-        ),
-      );
-    }
-  }
-
+  
   void _selectNearestHour() {
     if (widget.hourlyData.isEmpty) return;
 
@@ -134,30 +108,7 @@ class _HourlyForecastState extends State<HourlyForecast> {
                     ),
                   ],
                 ),
-                if (!isPremium)
-                  ElevatedButton.icon(
-                    onPressed:
-                        _isLoading ? null : () => _showRewardedAd(context),
-                    icon: _isLoading
-                        ? const SizedBox(
-                            width: 16,
-                            height: 16,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
-                            ),
-                          )
-                        : const Icon(Icons.play_circle_outline, size: 16),
-                    label: Text(AppLocalizations.getPremium),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue.shade700,
-                      foregroundColor: Colors.white,
-                      textStyle: const TextStyle(fontSize: 12),
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 4),
-                    ),
-                  ),
-                if (isPremium)
+                  if (isPremium)
                   Container(
                     padding:
                         const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -196,6 +147,8 @@ class _HourlyForecastState extends State<HourlyForecast> {
                 controller: _scrollController,
                 scrollDirection: Axis.horizontal,
                 itemCount: nextHours.length,
+                addAutomaticKeepAlives: true,
+                addRepaintBoundaries: true,
                 itemBuilder: (context, index) {
                   final hourly = nextHours[index];
                   final isSelected = _selectedIndex == index;

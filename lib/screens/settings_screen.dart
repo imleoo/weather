@@ -97,13 +97,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
               // 更新桌面小部件
               ListTile(
-                title: const Text('更新桌面小部件'),
-                subtitle: const Text('手动更新钓鱼天气小部件数据'),
+                title: Text(AppLocalizations.updateWidget),
+                subtitle: Text(AppLocalizations.updateWidgetSubtitle),
                 trailing: const Icon(Icons.refresh),
                 onTap: () async {
                   // 显示加载指示器
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('正在更新小部件数据...')),
+                    SnackBar(
+                        content: Text(AppLocalizations.updatingWidgetData)),
                   );
 
                   // 更新小部件数据
@@ -112,7 +113,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   // 显示成功消息
                   if (mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('小部件数据已更新')),
+                      SnackBar(
+                          content: Text(AppLocalizations.widgetDataUpdated)),
                     );
                   }
                 },
@@ -132,13 +134,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     children: [
                       const SizedBox(height: 20),
                       Text('${AppLocalizations.privacyPolicy}:'),
-                      const Text('https://example.com/privacy'),
+                      const Text('https://www.leoobai.cn/privacy'),
                       const SizedBox(height: 10),
                       Text('${AppLocalizations.termsOfService}:'),
-                      const Text('https://example.com/terms'),
+                      const Text('https://www.leoobai.cn/terms'),
                       const SizedBox(height: 10),
                       Text('${AppLocalizations.openSourceLicenses}:'),
-                      const Text('https://example.com/licenses'),
+                      const Text('https://www.leoobai.cn/licenses'),
+                      const SizedBox(height: 20),
+                      Text('${AppLocalizations.telegramCommunity}:'),
+                      const Text('https://t.me/+ljjbNTiM4bExMDkx'),
                     ],
                   );
                 },

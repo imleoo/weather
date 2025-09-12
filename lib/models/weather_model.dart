@@ -21,21 +21,29 @@ class WeatherModel {
 
   factory WeatherModel.fromJson(Map<String, dynamic> json) {
     try {
-      // 检查并处理current_condition
-      List<dynamic> currentConditionList =
-          json['current_condition'] as List? ?? [];
+      // 检查并处理current_condition - 更安全的类型转换
+      List<dynamic> currentConditionList = [];
+      if (json['current_condition'] is List) {
+        currentConditionList = json['current_condition'] as List;
+      }
       if (currentConditionList.isEmpty) {
         currentConditionList = [{}]; // 提供一个空对象作为默认值
       }
 
-      // 检查并处理weather
-      List<dynamic> weatherList = json['weather'] as List? ?? [];
+      // 检查并处理weather - 更安全的类型转换
+      List<dynamic> weatherList = [];
+      if (json['weather'] is List) {
+        weatherList = json['weather'] as List;
+      }
       if (weatherList.isEmpty) {
         weatherList = [{}]; // 提供一个空对象作为默认值
       }
 
-      // 检查并处理nearest_area
-      List<dynamic> nearestAreaList = json['nearest_area'] as List? ?? [];
+      // 检查并处理nearest_area - 更安全的类型转换
+      List<dynamic> nearestAreaList = [];
+      if (json['nearest_area'] is List) {
+        nearestAreaList = json['nearest_area'] as List;
+      }
       if (nearestAreaList.isEmpty) {
         nearestAreaList = [{}]; // 提供一个空对象作为默认值
       }
@@ -162,14 +170,20 @@ class Weather {
 
   factory Weather.fromJson(Map<String, dynamic> json) {
     try {
-      // 检查并处理hourly
-      List<dynamic> hourlyList = json['hourly'] as List? ?? [];
+      // 检查并处理hourly - 更安全的类型转换
+      List<dynamic> hourlyList = [];
+      if (json['hourly'] is List) {
+        hourlyList = json['hourly'] as List;
+      }
       if (hourlyList.isEmpty) {
         hourlyList = [{}]; // 提供一个空对象作为默认值
       }
 
-      // 检查并处理astronomy
-      List<dynamic> astronomyList = json['astronomy'] as List? ?? [];
+      // 检查并处理astronomy - 更安全的类型转换
+      List<dynamic> astronomyList = [];
+      if (json['astronomy'] is List) {
+        astronomyList = json['astronomy'] as List;
+      }
       if (astronomyList.isEmpty) {
         astronomyList = [{}]; // 提供一个空对象作为默认值
       }

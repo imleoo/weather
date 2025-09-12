@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/weather_provider.dart';
+import '../providers/settings_provider.dart';
 import '../utils/weather_icons.dart';
 import '../widgets/current_weather.dart';
 import '../widgets/fishing_daily_forecast.dart';
 import '../widgets/weather_selectors.dart';
 import '../l10n/app_localizations.dart';
+import '../services/ad_service.dart';
 import 'city_search_screen.dart';
 import 'settings_screen.dart';
 
@@ -23,6 +25,8 @@ class _WeatherTabState extends State<WeatherTab> {
     // 初始化时获取当前位置的天气
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _fetchWeatherData();
+      // 预加载广告
+      AdService.initialize();
     });
   }
 
@@ -90,20 +94,63 @@ class _WeatherTabState extends State<WeatherTab> {
           IconButton(
             icon: const Icon(Icons.my_location, color: Colors.white),
             onPressed: () async {
+              // 显示开始提示
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('正在获取位置信息...'),
+                    duration: Duration(seconds: 2),
+                  ),
+                );
+              }
+              
+              // 并行执行广告显示和定位功能
               final weatherProvider = Provider.of<WeatherProvider>(
                 context,
                 listen: false,
               );
-              try {
-                // 点击定位按钮时使用GPS精确定位
-                await weatherProvider.fetchWeatherByCurrentLocation();
-              } catch (e) {
+              
+              // 启动定位任务
+              final locationTask = weatherProvider.fetchWeatherByCurrentLocation().then((_) {
+                // 定位成功 - 立即停止广告
+                print('🎯 定位完成，立即停止广告播放');
+                AdService.stopAd();
+                
+                // 显示定位成功提示
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('位置信息已更新'),
+                      duration: Duration(seconds: 2),
+                    ),
+                  );
+                }
+              }).catchError((e) {
+                // 定位失败 - 也停止广告
+                print('❌ 定位失败，停止广告播放');
+                AdService.stopAd();
+                
+                // 显示定位失败提示
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(content: Text('获取天气数据失败: ${e.toString()}')),
                   );
                 }
+              });
+              
+              // 启动广告显示任务
+              try {
+                print('准备显示激励广告...');
+                AdService.showRewardedAd(context).then((adResult) {
+                  print('广告结果显示: $adResult');
+                }).catchError((e) {
+                  print('广告显示异常: $e');
+                });
+              } catch (e) {
+                print('广告启动异常: $e');
               }
+              
+              print('🚀 定位和广告任务已并行启动 - 定位完成时将停止广告');
             },
           ),
         ],
