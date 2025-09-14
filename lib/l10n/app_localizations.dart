@@ -1,26 +1,62 @@
+import 'dart:ui';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'app_en.dart';
 import 'app_zh.dart';
 
 class AppLocalizations {
   static const String _languageKey = 'language_code';
+  static const String _systemLanguageKey = 'system_language_follow';
   static const String languageEn = 'en';
   static const String languageZh = 'zh';
 
-  static String _currentLanguage = languageEn; // 默认英文
+  static String _currentLanguage = languageEn; // 默认英文，会被init覆盖
+  static bool _followSystemLanguage = true; // 默认跟随系统语言
 
   static Future<void> init() async {
     final prefs = await SharedPreferences.getInstance();
-    _currentLanguage = prefs.getString(_languageKey) ?? languageEn;
+    _followSystemLanguage = prefs.getBool(_systemLanguageKey) ?? true;
+    
+    if (_followSystemLanguage) {
+      // 跟随系统语言
+      final systemLocale = PlatformDispatcher.instance.locale.languageCode;
+      _currentLanguage = (systemLocale == 'zh') ? languageZh : languageEn;
+      print('🌐 AppLocalizations: 跟随系统语言，系统语言=$systemLocale，当前语言=$_currentLanguage');
+      
+      // 临时强制设置为中文进行测试
+      _currentLanguage = languageZh;
+      print('🌐 AppLocalizations: 临时强制设置为中文进行测试');
+    } else {
+      // 使用手动设置的语言
+      _currentLanguage = prefs.getString(_languageKey) ?? languageEn;
+      print('🌐 AppLocalizations: 使用手动设置语言=$_currentLanguage');
+    }
+    print('🌐 AppLocalizations: 初始化完成，当前语言=$_currentLanguage，是否英文=${isEnglish}');
   }
 
   static Future<void> setLanguage(String languageCode) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_languageKey, languageCode);
+    await prefs.setBool(_systemLanguageKey, false); // 设置手动语言后不再跟随系统
+    _followSystemLanguage = false;
     _currentLanguage = languageCode;
   }
 
+  // 设置跟随系统语言
+  static Future<void> setFollowSystemLanguage(bool follow) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_systemLanguageKey, follow);
+    _followSystemLanguage = follow;
+    
+    if (follow) {
+      // 重新根据系统语言设置
+      final systemLocale = PlatformDispatcher.instance.locale.languageCode;
+      _currentLanguage = (systemLocale == 'zh') ? languageZh : languageEn;
+    }
+  }
+
   static String get currentLanguage => _currentLanguage;
+  
+  static bool get isFollowingSystem => _followSystemLanguage;
 
   static bool get isEnglish => _currentLanguage == languageEn;
 

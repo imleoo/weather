@@ -110,41 +110,41 @@ class FishingWeatherWidgetLargeProvider : AppWidgetProvider() {
             // 获取存储的数据
             val widgetData = HomeWidgetPlugin.getData(context)
             val views = RemoteViews(context.packageName, R.layout.fishing_widget_layout_large).apply {
-                // 获取系统语言
-                val locale = context.resources.configuration.locales[0]
-                val isEnglish = locale.language == "en"
-                
+                // 直接使用应用保存的本地化文本
                 // 设置标题
-                val titleText = if (isEnglish) "Fishing Weather" else "钓鱼天气"
+                val titleText = widgetData.getString("widget_title", "Fishing Weather")
                 setTextViewText(R.id.widget_title, titleText)
                 
                 // 设置天气状况
-                val weatherCondition = widgetData.getString("weatherCondition", if (isEnglish) "Unknown" else "未知")
+                val weatherCondition = widgetData.getString("weatherCondition", "Unknown")
                 setTextViewText(R.id.weather_condition, weatherCondition)
                 
                 // 设置温度
                 val temperature = widgetData.getString("temperature", "--°C")
                 setTextViewText(R.id.temperature, temperature)
                 
-                // 设置钓鱼适宜性
-                val suitabilityKey = if (isEnglish) "suitability_en" else "suitability"
-                val suitability = widgetData.getString(suitabilityKey, if (isEnglish) "Unknown" else "未知")
-                val score = widgetData.getString("score", "--")
-                val suitabilityText = if (isEnglish) "Level: $suitability" else "适宜性: $suitability"
-                setTextViewText(R.id.fishing_suitability, suitabilityText)
+                // 设置钓鱼适宜性 - 直接使用应用保存的本地化文本
+                val suitabilityText = widgetData.getString("suitability", "Poor")
+                val levelText = widgetData.getString("level_prefix", "Level: ") + suitabilityText
+                setTextViewText(R.id.fishing_suitability, levelText)
                 
                 // 设置评分
-                val scoreText = if (isEnglish) "Score: $score" else "评分: $score"
-                setTextViewText(R.id.fishing_score, scoreText)
+                val scoreText = widgetData.getString("score", "--")
+                val scoreDisplayText = widgetData.getString("score_prefix", "Score: ") + scoreText
+                setTextViewText(R.id.fishing_score, scoreDisplayText)
                 
-                // 设置天气图标
-                val weatherCode = widgetData.getString("weatherCode", "") ?: ""
-                val weatherIconRes = getWeatherIconResource(weatherCode)
+                // 设置天气图标（从天气描述推断图标）
+                val safeWeatherCondition = weatherCondition ?: "Unknown"
+                val weatherIconRes = getWeatherIconResource(safeWeatherCondition)
                 setImageViewResource(R.id.weather_icon, weatherIconRes)
                 
-                // 设置适宜性图标颜色
-                val suitabilityLevel = widgetData.getString("suitabilityLevel", "") ?: ""
-                val suitabilityColor = getSuitabilityColor(suitabilityLevel)
+                // 设置适宜性图标颜色（从评分推断）
+                val scoreValue = try {
+                    scoreText?.toIntOrNull() ?: 0
+                } catch (e: Exception) {
+                    0
+                }
+                val suitabilityColor = getSuitabilityColor(scoreValue)
                 setInt(R.id.suitability_indicator, "setColorFilter", suitabilityColor)
                 
                 // 设置当前时间（每次更新时都会刷新，显示时分）
@@ -153,7 +153,7 @@ class FishingWeatherWidgetLargeProvider : AppWidgetProvider() {
                 setTextViewText(R.id.current_time, currentTime)
                 
                 // 设置定位地址
-                val location = widgetData.getString("location", if (isEnglish) "Unknown Location" else "未知位置")
+                val location = widgetData.getString("location", "Unknown Location")
                 setTextViewText(R.id.location_text, location)
                 
                 // 创建一个明确的Intent来启动MainActivity
@@ -211,28 +211,28 @@ class FishingWeatherWidgetLargeProvider : AppWidgetProvider() {
     }
     
     /**
-     * 根据天气代码获取对应的图标资源ID
+     * 根据天气描述获取对应的图标资源ID
      */
-    private fun getWeatherIconResource(weatherCode: String): Int {
-        return when (weatherCode) {
-            "113" -> R.drawable.ic_sunny // 晴天
-            "116", "119", "122" -> R.drawable.ic_partly_cloudy // 多云/阴天
-            "143", "248", "260" -> R.drawable.ic_weather_default // 雾
-            "176", "293", "296", "299", "302", "308", "353", "356" -> R.drawable.ic_rain // 各种雨
-            else -> R.drawable.ic_weather_default // 默认天气图标
+    private fun getWeatherIconResource(weatherCondition: String): Int {
+        val condition = weatherCondition.lowercase()
+        return when {
+            condition.contains("sunny") || condition.contains("晴") -> R.drawable.ic_sunny
+            condition.contains("cloud") || condition.contains("云") || condition.contains("overcast") || condition.contains("阴") -> R.drawable.ic_partly_cloudy
+            condition.contains("rain") || condition.contains("雨") || condition.contains("shower") -> R.drawable.ic_rain
+            condition.contains("fog") || condition.contains("雾") || condition.contains("mist") -> R.drawable.ic_weather_default
+            else -> R.drawable.ic_weather_default
         }
     }
     
     /**
-     * 根据适宜性级别获取对应的颜色
+     * 根据钓鱼评分获取对应的颜色
      */
-    private fun getSuitabilityColor(level: String): Int {
-        return when (level) {
-            "excellent" -> 0xFF4CAF50.toInt() // 绿色，非常适宜
-            "good" -> 0xFF8BC34A.toInt() // 浅绿色，适宜
-            "moderate" -> 0xFFFFC107.toInt() // 黄色，一般
-            "poor" -> 0xFFF44336.toInt() // 红色，不适宜
-            else -> 0xFF9E9E9E.toInt() // 灰色，未知
+    private fun getSuitabilityColor(score: Int): Int {
+        return when {
+            score >= 12 -> 0xFF4CAF50.toInt() // 绿色，极佳(Excellent)
+            score >= 8 -> 0xFF2196F3.toInt() // 蓝色，良好(Good)
+            score >= 4 -> 0xFFFF9800.toInt() // 橙色，一般(Moderate)
+            else -> 0xFFF44336.toInt() // 红色，较差(Poor)
         }
     }
 }

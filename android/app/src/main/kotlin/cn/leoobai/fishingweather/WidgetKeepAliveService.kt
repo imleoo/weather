@@ -84,7 +84,7 @@ class WidgetKeepAliveService : Service() {
         
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             Notification.Builder(this, channelId)
-                .setContentTitle("Fishing Weather Widget")
+                .setContentTitle("Fishing Weather")
                 .setContentText("Widget service is running")
                 .setSmallIcon(R.drawable.ic_weather_default)
                 .setOngoing(true)
@@ -94,7 +94,7 @@ class WidgetKeepAliveService : Service() {
         } else {
             @Suppress("DEPRECATION")
             Notification.Builder(this)
-                .setContentTitle("Fishing Weather Widget")
+                .setContentTitle("Fishing Weather")
                 .setContentText("Widget service is running")
                 .setSmallIcon(R.drawable.ic_weather_default)
                 .setOngoing(true)

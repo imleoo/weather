@@ -20,6 +20,10 @@ class WeatherModel {
   });
 
   factory WeatherModel.fromJson(Map<String, dynamic> json) {
+    return WeatherModel.fromJsonWithLanguage(json, AppLocalizations.isEnglish);
+  }
+
+  factory WeatherModel.fromJsonWithLanguage(Map<String, dynamic> json, bool isEnglish) {
     try {
       // 检查并处理current_condition - 更安全的类型转换
       List<dynamic> currentConditionList = [];
@@ -49,17 +53,17 @@ class WeatherModel {
       }
 
       return WeatherModel(
-        currentCondition: CurrentCondition.fromJson(currentConditionList[0]),
+        currentCondition: CurrentCondition.fromJsonWithLanguage(currentConditionList[0], isEnglish),
         forecast:
-            weatherList.map((weather) => Weather.fromJson(weather)).toList(),
+            weatherList.map((weather) => Weather.fromJsonWithLanguage(weather, isEnglish)).toList(),
         nearestArea: NearestArea.fromJson(nearestAreaList[0]),
       );
     } catch (e) {
       print('解析天气模型出错: $e');
       // 返回一个带有默认值的模型
       return WeatherModel(
-        currentCondition: CurrentCondition.fromJson({}),
-        forecast: [Weather.fromJson({})],
+        currentCondition: CurrentCondition.fromJsonWithLanguage({}, isEnglish),
+        forecast: [Weather.fromJsonWithLanguage({}, isEnglish)],
         nearestArea: NearestArea.fromJson({}),
       );
     }
@@ -94,15 +98,23 @@ class CurrentCondition {
   });
 
   factory CurrentCondition.fromJson(Map<String, dynamic> json) {
+    return CurrentCondition.fromJsonWithLanguage(json, AppLocalizations.isEnglish);
+  }
+
+  factory CurrentCondition.fromJsonWithLanguage(Map<String, dynamic> json, bool isEnglish) {
     String getWeatherDesc() {
       try {
         // 根据当前语言选择合适的天气描述
-        if (!AppLocalizations.isEnglish) {
+        print('🌤️ CurrentCondition: 当前语言=${isEnglish ? '英文' : '中文'}, 解析天气描述...');
+        
+        if (!isEnglish) {
           // 尝试获取中文天气描述
           if (json['lang_zh'] != null) {
-            print('找到lang_zh字段: ${json['lang_zh']}');
+            print('🌤️ CurrentCondition: 找到lang_zh字段: ${json['lang_zh']}');
             if (json['lang_zh'] is List && json['lang_zh'].isNotEmpty) {
-              return json['lang_zh'][0]['value'] ?? '未知天气';
+              final chineseDesc = json['lang_zh'][0]['value'] ?? '未知天气';
+              print('🌤️ CurrentCondition: 使用中文天气描述: $chineseDesc');
+              return chineseDesc;
             }
           } else if (json['languages'] != null &&
               json['languages'] is List &&
@@ -169,6 +181,10 @@ class Weather {
   });
 
   factory Weather.fromJson(Map<String, dynamic> json) {
+    return Weather.fromJsonWithLanguage(json, AppLocalizations.isEnglish);
+  }
+
+  factory Weather.fromJsonWithLanguage(Map<String, dynamic> json, bool isEnglish) {
     try {
       // 检查并处理hourly - 更安全的类型转换
       List<dynamic> hourlyList = [];
@@ -194,7 +210,7 @@ class Weather {
         mintempC: json['mintempC']?.toString() ?? '0',
         sunHour: json['sunHour']?.toString() ?? '0',
         uvIndex: json['uvIndex']?.toString() ?? '0',
-        hourly: hourlyList.map((hourly) => Hourly.fromJson(hourly)).toList(),
+        hourly: hourlyList.map((hourly) => Hourly.fromJsonWithLanguage(hourly, isEnglish)).toList(),
         astronomy: Astronomy.fromJson(astronomyList[0]),
       );
     } catch (e) {
@@ -206,7 +222,7 @@ class Weather {
         mintempC: '0',
         sunHour: '0',
         uvIndex: '0',
-        hourly: [Hourly.fromJson({})],
+        hourly: [Hourly.fromJsonWithLanguage({}, isEnglish)],
         astronomy: Astronomy.fromJson({}),
       );
     }
@@ -243,15 +259,23 @@ class Hourly {
   });
 
   factory Hourly.fromJson(Map<String, dynamic> json) {
+    return Hourly.fromJsonWithLanguage(json, AppLocalizations.isEnglish);
+  }
+
+  factory Hourly.fromJsonWithLanguage(Map<String, dynamic> json, bool isEnglish) {
     String getWeatherDesc() {
       try {
         // 根据当前语言选择合适的天气描述
-        if (!AppLocalizations.isEnglish) {
+        print('🌤️ Hourly: 当前语言=${isEnglish ? '英文' : '中文'}, 解析天气描述...');
+        
+        if (!isEnglish) {
           // 尝试获取中文天气描述
           if (json['lang_zh'] != null) {
-            print('找到lang_zh字段: ${json['lang_zh']}');
+            print('🌤️ Hourly: 找到lang_zh字段: ${json['lang_zh']}');
             if (json['lang_zh'] is List && json['lang_zh'].isNotEmpty) {
-              return json['lang_zh'][0]['value'] ?? '未知天气';
+              final chineseDesc = json['lang_zh'][0]['value'] ?? '未知天气';
+              print('🌤️ Hourly: 使用中文天气描述: $chineseDesc');
+              return chineseDesc;
             }
           } else if (json['languages'] != null &&
               json['languages'] is List &&
@@ -278,7 +302,7 @@ class Hourly {
         }
       } catch (e) {
         print('解析小时天气描述出错: $e');
-        return AppLocalizations.isEnglish ? 'Unknown' : '未知天气';
+        return isEnglish ? 'Unknown' : '未知天气';
       }
     }
 

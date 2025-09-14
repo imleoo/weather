@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/widget_service.dart';
 
-/// 应用生命周期管理器
+/// 简化的应用生命周期管理器
 class AppLifecycleManager extends StatefulWidget {
   final Widget child;
 
@@ -33,25 +33,12 @@ class _AppLifecycleManagerState extends State<AppLifecycleManager>
     super.didChangeAppLifecycleState(state);
     
     switch (state) {
-      case AppLifecycleState.resumed:
-        // 应用进入前台
-        WidgetService.onAppForeground();
-        break;
-      case AppLifecycleState.paused:
-        // 应用进入后台
-        WidgetService.onAppBackground();
-        break;
       case AppLifecycleState.detached:
-        // 应用被终止
-        WidgetService.stopAllTimers();
+        // 应用被终止时清理资源
+        WidgetService.dispose();
         break;
-      case AppLifecycleState.inactive:
-        // 应用处于非活动状态
-        WidgetService.onAppBackground();
-        break;
-      case AppLifecycleState.hidden:
-        // 应用处于隐藏状态
-        WidgetService.onAppBackground();
+      default:
+        // 其他状态暂时不需要特殊处理
         break;
     }
   }

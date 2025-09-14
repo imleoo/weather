@@ -13,14 +13,8 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await AppLocalizations.init();
 
-  // 初始化日志系统 - 禁用文件日志以避免Android权限问题
-  await AppLogger.init(
-    enableConsoleLog: true,
-    enableFileLog: false, // 禁用文件日志，避免Android权限问题
-    minLevel: LogLevel.debug,
-  );
-
-  AppLogger.info('应用启动', tag: 'APP');
+  // 初始化日志系统 - 简化版本，避免Android权限问题
+  // AppLogger.debug('应用启动日志初始化');
 
   // 初始化小部件服务（添加错误处理）
   try {

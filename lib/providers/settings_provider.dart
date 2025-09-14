@@ -44,6 +44,11 @@ class SettingsProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> setFollowSystemLanguage(bool follow) async {
+    await AppLocalizations.setFollowSystemLanguage(follow);
+    notifyListeners();
+  }
+
   Future<void> setUpdateFrequency(String frequency) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_updateFrequencyKey, frequency);

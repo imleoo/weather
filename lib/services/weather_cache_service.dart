@@ -1,9 +1,13 @@
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../l10n/app_localizations.dart';
 
 class WeatherCacheService {
   static const String _cachePrefix = 'weather_cache_';
   static const Duration _cacheDuration = Duration(minutes: 10);
+
+  /// 获取当前语言标识
+  String _getCurrentLanguage() => AppLocalizations.isEnglish ? 'en' : 'zh';
 
   Future<void> cacheWeatherData(String key, Map<String, dynamic> data) async {
     final prefs = await SharedPreferences.getInstance();
@@ -53,7 +57,7 @@ class WeatherCacheService {
     }
   }
 
-  String generateCacheKey(String city) => 'city_$city';
+  String generateCacheKey(String city) => 'city_${_getCurrentLanguage()}_$city';
   String generateLocationCacheKey(double lat, double lon) =>
-      'location_${lat.toStringAsFixed(2)}_${lon.toStringAsFixed(2)}';
+      'location_${_getCurrentLanguage()}_${lat.toStringAsFixed(2)}_${lon.toStringAsFixed(2)}';
 }
