@@ -9,8 +9,9 @@ import 'package:provider/provider.dart';
 
 class HourlyForecast extends StatefulWidget {
   final List<Hourly> hourlyData;
+  final String? observationTime;
 
-  const HourlyForecast({super.key, required this.hourlyData});
+  const HourlyForecast({super.key, required this.hourlyData, this.observationTime});
 
   @override
   State<HourlyForecast> createState() => _HourlyForecastState();
@@ -33,8 +34,22 @@ class _HourlyForecastState extends State<HourlyForecast> {
   void _selectNearestHour() {
     if (widget.hourlyData.isEmpty) return;
 
-    final now = DateTime.now();
-    final currentHour = now.hour;
+    // 优先使用API观察时间，如果没有则使用系统时间
+    int currentHour;
+    if (widget.observationTime != null && widget.observationTime!.isNotEmpty) {
+      // 解析API观察时间，格式如 "2025-09-14 10:06 PM"
+      try {
+        final obsDateTime = _parseObservationDateTime(widget.observationTime!);
+        currentHour = obsDateTime.hour;
+        print('⏰ HourlyForecast: 使用API观察时间选择小时: $currentHour (来自 ${widget.observationTime})');
+      } catch (e) {
+        print('⏰ HourlyForecast: 解析观察时间失败，使用系统时间: $e');
+        currentHour = DateTime.now().hour;
+      }
+    } else {
+      currentHour = DateTime.now().hour;
+      print('⏰ HourlyForecast: 使用系统时间选择小时: $currentHour');
+    }
     int nearestIndex = 0;
     int smallestDifference = 24; // 最大可能差值
 
@@ -276,13 +291,7 @@ class _HourlyForecastState extends State<HourlyForecast> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            hourly.weatherDesc,
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
+          _buildWeatherDescriptionWithTooltip(hourly.weatherDesc, hourly.weatherCode),
           const SizedBox(height: 8),
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
@@ -339,5 +348,81 @@ class _HourlyForecastState extends State<HourlyForecast> {
         ],
       ),
     );
+  }
+
+  // 构建带工具提示的天气描述，处理长文本显示
+  Widget _buildWeatherDescriptionWithTooltip(String weatherDesc, String weatherCode) {
+    final weatherColor = WeatherIcons.getWeatherColor(weatherCode);
+    
+    // 如果文本很短，直接显示
+    if (weatherDesc.length <= 20) {
+      return Text(
+        weatherDesc,
+        style: TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.bold,
+          color: weatherColor,
+        ),
+      );
+    }
+
+    // 如果文本很长，显示截断版本并提供工具提示
+    return Tooltip(
+      message: weatherDesc,
+      decoration: BoxDecoration(
+        color: Colors.grey.shade800,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      textStyle: const TextStyle(
+        color: Colors.white,
+        fontSize: 14,
+      ),
+      preferBelow: true,
+      verticalOffset: 20,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      child: Text(
+        weatherDesc,
+        style: TextStyle(
+          fontSize: 14, // 长文本时稍微减小字体
+          fontWeight: FontWeight.bold,
+          color: weatherColor,
+        ),
+        overflow: TextOverflow.ellipsis,
+        maxLines: 2,
+      ),
+    );
+  }
+
+  // 解析API观察时间，格式如 "2025-09-14 10:06 PM"
+  DateTime _parseObservationDateTime(String observationTime) {
+    try {
+      // 移除可能的时区信息并解析
+      final cleanTime = observationTime.split(' ')[0]; // 获取日期部分
+      final timePart = observationTime.substring(cleanTime.length + 1); // 获取时间部分
+      
+      // 解析日期
+      final dateParts = cleanTime.split('-');
+      final year = int.parse(dateParts[0]);
+      final month = int.parse(dateParts[1]);
+      final day = int.parse(dateParts[2]);
+      
+      // 解析时间 (格式: "10:06 PM")
+      final timeParts = timePart.split(' ');
+      final hourMinute = timeParts[0].split(':');
+      var hour = int.parse(hourMinute[0]);
+      final minute = int.parse(hourMinute[1]);
+      
+      // 处理AM/PM
+      if (timeParts.length > 1 && timeParts[1] == 'PM' && hour != 12) {
+        hour += 12;
+      } else if (timeParts.length > 1 && timeParts[1] == 'AM' && hour == 12) {
+        hour = 0;
+      }
+      
+      return DateTime(year, month, day, hour, minute);
+    } catch (e) {
+      print('⏰ HourlyForecast: 解析观察时间失败: $e, 原始值: $observationTime');
+      rethrow;
+    }
   }
 }

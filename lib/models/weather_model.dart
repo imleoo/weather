@@ -82,6 +82,7 @@ class CurrentCondition {
   final String visibility;
   final String uvIndex;
   final String observationTime;
+  final String localObsDateTime;
 
   CurrentCondition({
     required this.tempC,
@@ -95,6 +96,7 @@ class CurrentCondition {
     required this.visibility,
     required this.uvIndex,
     required this.observationTime,
+    required this.localObsDateTime,
   });
 
   factory CurrentCondition.fromJson(Map<String, dynamic> json) {
@@ -157,6 +159,7 @@ class CurrentCondition {
       visibility: json['visibility']?.toString() ?? '0',
       uvIndex: json['uvIndex']?.toString() ?? '0',
       observationTime: json['observation_time']?.toString() ?? '00:00 AM',
+      localObsDateTime: json['localObsDateTime']?.toString() ?? '',
     );
   }
 }

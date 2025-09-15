@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../l10n/app_localizations.dart';
 import '../providers/settings_provider.dart';
 import '../services/widget_service.dart';
@@ -130,20 +131,76 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     context: context,
                     applicationName: AppLocalizations.appTitle,
                     applicationVersion: '1.0.0',
-                    applicationIcon: const Icon(Icons.cloud),
+                    applicationIcon: Image.asset('assets/icon/app_icon.png', width: 128, height: 128),
                     children: [
                       const SizedBox(height: 20),
                       Text('${AppLocalizations.privacyPolicy}:'),
-                      const Text('https://www.leoobai.cn/privacy'),
+                      GestureDetector(
+                        onTap: () async {
+                          final Uri url = Uri.parse('https://leoobai.cn/fishing-weather-privacy/');
+                          if (await canLaunchUrl(url)) {
+                            await launchUrl(url);
+                          }
+                        },
+                        child: const Text(
+                          'https://leoobai.cn/fishing-weather-privacy/',
+                          style: TextStyle(
+                            color: Colors.blue,
+                            decoration: TextDecoration.underline,
+                          ),
+                        ),
+                      ),
                       const SizedBox(height: 10),
                       Text('${AppLocalizations.termsOfService}:'),
-                      const Text('https://www.leoobai.cn/terms'),
+                      GestureDetector(
+                        onTap: () async {
+                          final Uri url = Uri.parse('https://leoobai.cn/fishing-weather-terms/');
+                          if (await canLaunchUrl(url)) {
+                            await launchUrl(url);
+                          }
+                        },
+                        child: const Text(
+                          'https://leoobai.cn/fishing-weather-terms/',
+                          style: TextStyle(
+                            color: Colors.blue,
+                            decoration: TextDecoration.underline,
+                          ),
+                        ),
+                      ),
                       const SizedBox(height: 10),
                       Text('${AppLocalizations.openSourceLicenses}:'),
-                      const Text('https://www.leoobai.cn/licenses'),
+                      GestureDetector(
+                        onTap: () async {
+                          final Uri url = Uri.parse('https://www.leoobai.cn/licenses');
+                          if (await canLaunchUrl(url)) {
+                            await launchUrl(url);
+                          }
+                        },
+                        child: const Text(
+                          'https://www.leoobai.cn/licenses',
+                          style: TextStyle(
+                            color: Colors.blue,
+                            decoration: TextDecoration.underline,
+                          ),
+                        ),
+                      ),
                       const SizedBox(height: 20),
                       Text('${AppLocalizations.telegramCommunity}:'),
-                      const Text('https://t.me/+ljjbNTiM4bExMDkx'),
+                      GestureDetector(
+                        onTap: () async {
+                          final Uri url = Uri.parse('https://t.me/+ljjbNTiM4bExMDkx');
+                          if (await canLaunchUrl(url)) {
+                            await launchUrl(url);
+                          }
+                        },
+                        child: const Text(
+                          'https://t.me/+ljjbNTiM4bExMDkx',
+                          style: TextStyle(
+                            color: Colors.blue,
+                            decoration: TextDecoration.underline,
+                          ),
+                        ),
+                      ),
                     ],
                   );
                 },

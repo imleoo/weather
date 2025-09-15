@@ -27,6 +27,7 @@ dependencies:
   home_widget: ^0.8.0
   workmanager: ^0.9.0+2
   visibility_detector: ^0.4.0+2
+  url_launcher: ^6.3.0
 
 dev_dependencies:
   flutter_test:
@@ -39,6 +40,7 @@ flutter:
   uses-material-design: true
   assets:
     - assets/images/
+    - assets/icon/
 
 # 应用图标配置
 flutter_icons:

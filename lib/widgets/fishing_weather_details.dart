@@ -272,23 +272,65 @@ class FishingWeatherDetails extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            label,
-            style: TextStyle(
-              color: Colors.grey.shade700,
-              fontSize: 14,
+          Expanded(
+            flex: 3,
+            child: Text(
+              label,
+              style: TextStyle(
+                color: Colors.grey.shade700,
+                fontSize: 14,
+              ),
             ),
           ),
-          Text(
-            value,
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 14,
-            ),
+          SizedBox(width: 16),
+          Expanded(
+            flex: 4,
+            child: _buildValueWithTooltip(value),
           ),
         ],
+      ),
+    );
+  }
+
+  // 为值添加工具提示，处理长文本显示
+  Widget _buildValueWithTooltip(String value) {
+    // 如果文本很短，直接显示
+    if (value.length <= 20) {
+      return Text(
+        value,
+        style: const TextStyle(
+          fontWeight: FontWeight.bold,
+          fontSize: 14,
+        ),
+        textAlign: TextAlign.right,
+      );
+    }
+
+    // 如果文本很长，显示截断版本并提供工具提示
+    return Tooltip(
+      message: value,
+      decoration: BoxDecoration(
+        color: Colors.grey.shade800,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      textStyle: const TextStyle(
+        color: Colors.white,
+        fontSize: 14,
+      ),
+      preferBelow: true,
+      verticalOffset: 20,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      child: Text(
+        value,
+        style: const TextStyle(
+          fontWeight: FontWeight.bold,
+          fontSize: 14,
+        ),
+        textAlign: TextAlign.right,
+        overflow: TextOverflow.ellipsis,
+        maxLines: 2,
       ),
     );
   }

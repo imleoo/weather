@@ -239,8 +239,14 @@ class _WeatherTabState extends State<WeatherTab> {
                               // 使用新的钓鱼天气预报组件
                               ForecastSelector(
                                 builder: (forecast) {
-                                  return FishingDailyForecast(
-                                      forecast: forecast);
+                                  return CurrentConditionSelector(
+                                    builder: (currentCondition) {
+                                      return FishingDailyForecast(
+                                        forecast: forecast,
+                                        observationTime: currentCondition.localObsDateTime,
+                                      );
+                                    },
+                                  );
                                 },
                               ),
                             ],

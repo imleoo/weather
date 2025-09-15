@@ -11,12 +11,14 @@ class FishingForecast extends StatefulWidget {
   final List<Hourly> hourlyData;
   final String date;
   final String dayName;
+  final String? observationTime;
 
   const FishingForecast({
     super.key,
     required this.hourlyData,
     required this.date,
     required this.dayName,
+    this.observationTime,
   });
 
   @override
@@ -49,7 +51,22 @@ class _FishingForecastState extends State<FishingForecast> {
 
     if (isToday) {
       // 当天：找到离当前时间最近的小时
-      final currentHour = now.hour;
+      // 优先使用API观察时间，如果没有则使用系统时间
+      int currentHour;
+      if (widget.observationTime != null && widget.observationTime!.isNotEmpty) {
+        // 解析API观察时间，格式如 "2025-09-14 10:06 PM"
+        try {
+          final obsDateTime = _parseObservationDateTime(widget.observationTime!);
+          currentHour = obsDateTime.hour;
+          print('🎣 FishingForecast: 使用API观察时间选择小时: $currentHour (来自 ${widget.observationTime})');
+        } catch (e) {
+          print('🎣 FishingForecast: 解析观察时间失败，使用系统时间: $e');
+          currentHour = now.hour;
+        }
+      } else {
+        currentHour = now.hour;
+        print('🎣 FishingForecast: 使用系统时间选择小时: $currentHour');
+      }
       int nearestIndex = 0;
       int smallestDifference = 24;
 
@@ -291,5 +308,38 @@ class _FishingForecastState extends State<FishingForecast> {
         size: isSelected ? 36 : 28,
       ),
     );
+  }
+
+  // 解析API观察时间，格式如 "2025-09-14 10:06 PM"
+  DateTime _parseObservationDateTime(String observationTime) {
+    try {
+      // 移除可能的时区信息并解析
+      final cleanTime = observationTime.split(' ')[0]; // 获取日期部分
+      final timePart = observationTime.substring(cleanTime.length + 1); // 获取时间部分
+      
+      // 解析日期
+      final dateParts = cleanTime.split('-');
+      final year = int.parse(dateParts[0]);
+      final month = int.parse(dateParts[1]);
+      final day = int.parse(dateParts[2]);
+      
+      // 解析时间 (格式: "10:06 PM")
+      final timeParts = timePart.split(' ');
+      final hourMinute = timeParts[0].split(':');
+      var hour = int.parse(hourMinute[0]);
+      final minute = int.parse(hourMinute[1]);
+      
+      // 处理AM/PM
+      if (timeParts.length > 1 && timeParts[1] == 'PM' && hour != 12) {
+        hour += 12;
+      } else if (timeParts.length > 1 && timeParts[1] == 'AM' && hour == 12) {
+        hour = 0;
+      }
+      
+      return DateTime(year, month, day, hour, minute);
+    } catch (e) {
+      print('🎣 FishingForecast: 解析观察时间失败: $e, 原始值: $observationTime');
+      rethrow;
+    }
   }
 }

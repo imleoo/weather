@@ -5,8 +5,9 @@ import 'fishing_forecast.dart';
 
 class FishingDailyForecast extends StatefulWidget {
   final List<Weather> forecast;
+  final String? observationTime;
 
-  const FishingDailyForecast({super.key, required this.forecast});
+  const FishingDailyForecast({super.key, required this.forecast, this.observationTime});
 
   @override
   State<FishingDailyForecast> createState() => _FishingDailyForecastState();
@@ -131,6 +132,7 @@ class _FishingDailyForecastState extends State<FishingDailyForecast>
       hourlyData: selectedDay.hourly,
       date: date,
       dayName: dayName,
+      observationTime: widget.observationTime,
     );
   }
 

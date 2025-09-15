@@ -217,6 +217,9 @@ class _CurrentWeatherState extends State<CurrentWeather>
               ),
               const SizedBox(height: 20),
               Container(
+                constraints: BoxConstraints(
+                  maxWidth: MediaQuery.of(context).size.width * 0.8,
+                ),
                 padding: const EdgeInsets.symmetric(
                   horizontal: 16,
                   vertical: 8,
@@ -225,21 +228,7 @@ class _CurrentWeatherState extends State<CurrentWeather>
                   color: Colors.white.withOpacity(0.3),
                   borderRadius: BorderRadius.circular(30),
                 ),
-                child: Text(
-                  widget.currentCondition.weatherDesc,
-                  style: const TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white,
-                    shadows: [
-                      Shadow(
-                        color: Colors.black26,
-                        blurRadius: 2,
-                        offset: Offset(1, 1),
-                      ),
-                    ],
-                  ),
-                ),
+                child: _buildWeatherDescriptionWithTooltip(),
               ),
               const SizedBox(height: 20),
               Container(
@@ -321,6 +310,65 @@ class _CurrentWeatherState extends State<CurrentWeather>
           ),
         ),
       ],
+    );
+  }
+
+  // 构建带工具提示的天气描述，处理长文本显示
+  Widget _buildWeatherDescriptionWithTooltip() {
+    final weatherDesc = widget.currentCondition.weatherDesc;
+    
+    // 如果文本很短，直接显示
+    if (weatherDesc.length <= 15) {
+      return Text(
+        weatherDesc,
+        style: const TextStyle(
+          fontSize: 24,
+          fontWeight: FontWeight.w600,
+          color: Colors.white,
+          shadows: [
+            Shadow(
+              color: Colors.black26,
+              blurRadius: 2,
+              offset: Offset(1, 1),
+            ),
+          ],
+        ),
+        textAlign: TextAlign.center,
+      );
+    }
+
+    // 如果文本很长，显示截断版本并提供工具提示
+    return Tooltip(
+      message: weatherDesc,
+      decoration: BoxDecoration(
+        color: Colors.grey.shade800,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      textStyle: const TextStyle(
+        color: Colors.white,
+        fontSize: 16,
+      ),
+      preferBelow: true,
+      verticalOffset: 30,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      child: Text(
+        weatherDesc,
+        style: const TextStyle(
+          fontSize: 20, // 长文本时稍微减小字体
+          fontWeight: FontWeight.w600,
+          color: Colors.white,
+          shadows: [
+            Shadow(
+              color: Colors.black26,
+              blurRadius: 2,
+              offset: Offset(1, 1),
+            ),
+          ],
+        ),
+        textAlign: TextAlign.center,
+        overflow: TextOverflow.ellipsis,
+        maxLines: 1,
+      ),
     );
   }
 
