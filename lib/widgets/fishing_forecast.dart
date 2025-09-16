@@ -51,22 +51,27 @@ class _FishingForecastState extends State<FishingForecast> {
 
     if (isToday) {
       // 当天：找到离当前时间最近的小时
-      // 优先使用API观察时间，如果没有则使用系统时间
-      int currentHour;
+      // 使用系统时间作为主要参考，避免API观察时间延迟问题
+      int currentHour = now.hour;
+      
+      // 如果有API观察时间，计算时间差并用于调试，但仍以系统时间为准
       if (widget.observationTime != null && widget.observationTime!.isNotEmpty) {
-        // 解析API观察时间，格式如 "2025-09-14 10:06 PM"
         try {
           final obsDateTime = _parseObservationDateTime(widget.observationTime!);
-          currentHour = obsDateTime.hour;
-          print('🎣 FishingForecast: 使用API观察时间选择小时: $currentHour (来自 ${widget.observationTime})');
+          final obsHour = obsDateTime.hour;
+          final timeDifference = now.hour - obsHour;
+          print('🎣 FishingForecast: API观察时间: $obsHour, 系统时间: ${now.hour}, 时间差: ${timeDifference}小时 (来自 ${widget.observationTime})');
+          
+          // 如果时间差过大（超过3小时），可能存在时区或数据延迟问题
+          if (timeDifference.abs() > 3) {
+            print('🎣 FishingForecast: 检测到较大时间差，使用系统时间以确保准确性');
+          }
         } catch (e) {
           print('🎣 FishingForecast: 解析观察时间失败，使用系统时间: $e');
-          currentHour = now.hour;
         }
-      } else {
-        currentHour = now.hour;
-        print('🎣 FishingForecast: 使用系统时间选择小时: $currentHour');
       }
+      
+      print('🎣 FishingForecast: 使用系统时间选择小时: $currentHour');
       int nearestIndex = 0;
       int smallestDifference = 24;
 
